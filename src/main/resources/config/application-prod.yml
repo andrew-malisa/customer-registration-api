@@ -1,0 +1,64 @@
+logging:
+  level:
+    ROOT: INFO
+    tech.jhipster: INFO
+    com.vodacom.customerregistration.api: INFO
+
+management:
+  prometheus:
+    metrics:
+      export:
+        enabled: false
+
+spring:
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:postgresql://localhost:5432/CustomerRegistrationSystem
+    username: CustomerRegistrationSystem
+    password:
+    hikari:
+      poolName: Hikari
+      auto-commit: false
+  elasticsearch:
+    uris: http://localhost:9200
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+  thymeleaf:
+    cache: true
+
+server:
+  port: 8080
+  shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,application/javascript,application/json,image/svg+xml
+    min-response-size: 1024
+
+
+jhipster:
+  http:
+    cache:
+      timeToLiveInDays: 1461
+  security:
+    authentication:
+      jwt:
+        base64-secret: OGFkMTNmYzgzYWZlNTMwYmI3OGYyZWQzMjA1MDRmMjc3MzgwZDgyNDY3NmIzMjQzMGM0ZDMzMzhjOTdiZTk4ZmMyMDBiMzgyZTIwMDY3ZWRjMTY0Yjg5NmNlZmUxNmVhMDBmMGFhMTk2NjUxYzU1NjFkMTQ1ZjFlNmIzZWRhYWI=
+        token-validity-in-seconds: 86400
+        token-validity-in-seconds-for-remember-me: 2592000
+  mail:
+    base-url: http://my-server-url-to-change
+  logging:
+    use-json-format: false
+    logstash:
+      enabled: false
+      host: localhost
+      port: 5000
+      ring-buffer-size: 512

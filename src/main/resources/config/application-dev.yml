@@ -1,0 +1,70 @@
+logging:
+  level:
+    ROOT: DEBUG
+    tech.jhipster: DEBUG
+    org.hibernate.SQL: DEBUG
+    com.vodacom.customerregistration.api: DEBUG
+
+management:
+  health:
+    elasticsearch:
+      enabled: false
+
+spring:
+  devtools:
+    restart:
+      enabled: true
+      additional-exclude: static/**
+    livereload:
+      enabled: false
+  jackson:
+    serialization:
+      indent-output: true
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:postgresql://localhost:5432/CustomerRegistrationSystem
+    username: CustomerRegistrationSystem
+    password:
+    hikari:
+      poolName: Hikari
+      auto-commit: false
+  elasticsearch:
+    uris: http://localhost:9200
+  mail:
+    host: localhost
+    port: 1025
+    username:
+    password:
+  messages:
+    cache-duration: PT1S
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
+  forward-headers-strategy: native
+
+jhipster:
+  cors:
+    allowed-origins: 'http://localhost:8100,https://localhost:8100'
+    allowed-origin-patterns: 'https://*.githubpreview.dev'
+    allowed-methods: '*'
+    allowed-headers: '*'
+    exposed-headers: 'Authorization,Link,X-Total-Count,X-${jhipster.clientApp.name}-alert,X-${jhipster.clientApp.name}-error,X-${jhipster.clientApp.name}-params'
+    allow-credentials: true
+    max-age: 1800
+  security:
+    authentication:
+      jwt:
+        base64-secret: OGFkMTNmYzgzYWZlNTMwYmI3OGYyZWQzMjA1MDRmMjc3MzgwZDgyNDY3NmIzMjQzMGM0ZDMzMzhjOTdiZTk4ZmMyMDBiMzgyZTIwMDY3ZWRjMTY0Yjg5NmNlZmUxNmVhMDBmMGFhMTk2NjUxYzU1NjFkMTQ1ZjFlNmIzZWRhYWI=
+        token-validity-in-seconds: 86400
+        token-validity-in-seconds-for-remember-me: 2592000
+  mail:
+    base-url: http://127.0.0.1:8080
+  logging:
+    use-json-format: false
+    logstash:
+      enabled: false
+      host: localhost
+      port: 5000
+      ring-buffer-size: 512
