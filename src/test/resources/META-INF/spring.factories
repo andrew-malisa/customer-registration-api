@@ -1,0 +1,4 @@
+org.springframework.test.context.ContextCustomizerFactory = \
+    com.vodacom.customerregistration.api.config.\
+    SqlTestContainersSpringContextCustomizerFactory,com.vodacom.\
+    customerregistration.api.config.TestContainersSpringContextCustomizerFactory
