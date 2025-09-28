@@ -1,0 +1,16 @@
+# This configuration is intended for development purpose, it's **your** responsibility to harden it for production
+name: customerregistrationsystem
+services:
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: customerregistrationsystem-mailhog
+    ports:
+      # SMTP server (apps send mail here)
+      - 127.0.0.1:1025:1025
+      # Web UI (to view captured mails)
+      - 127.0.0.1:8025:8025
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
