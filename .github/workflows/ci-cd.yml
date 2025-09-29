@@ -110,7 +110,7 @@ jobs:
         restore-keys: ${{ runner.os }}-m2
 
     - name: Build application JAR
-      run: mvn clean package -DskipTests
+      run: mvn clean package -DskipTests -Dproperties.skip=true  # Skip properties plugin
 
     - name: Login to GHCR
       uses: docker/login-action@v3
