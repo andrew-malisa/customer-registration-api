@@ -21,8 +21,10 @@ public class Agent extends AbstractAuditingEntity<UUID> implements Serializable 
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "id")
+    @Column(name = "id", updatable = false, nullable = false)
+    @org.springframework.data.elasticsearch.annotations.Field(type = org.springframework.data.elasticsearch.annotations.FieldType.Keyword)
     private UUID id;
+
 
     @NotNull
     @Pattern(regexp = "^(\\+255|0)[67]\\d{8}$")

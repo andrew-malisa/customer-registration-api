@@ -23,7 +23,7 @@ jobs:
       contents: read
       checks: write
       pull-requests: write
-    
+
     services:
       postgres:
         image: postgres:17.4
@@ -110,7 +110,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build application JAR
-        run: mvn clean package -DskipTests -DskipProperties=true
+        run: mvn -f pom.xml clean package -DskipTests -DskipProperties=true
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -120,58 +120,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest .
+        run: |
+          docker build \
+            -f src/main/docker/Dockerfile \   # Dockerfile path
+            -t ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest \
+            .                                  # <-- use repo root as context
 
       - name: Push image to GHCR
         run: docker push ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest
-
-# Commented out deployment to EC2
-#  deploy:
-#    name: Deploy to EC2
-#    runs-on: ubuntu-latest
-#    needs: build
-#    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
-#    environment: production
-#    steps:
-#      - name: Prepare EC2 environment
-#        uses: appleboy/ssh-action@v1.0.3
-#        with:
-#          host: ${{ env.EC2_HOST }}
-#          username: ${{ env.EC2_USER }}
-#          key: ${{ secrets.SSH_PRIVATE_KEY }}
-#          port: 22
-#          timeout: 600s
-#          command_timeout: 30m
-#          script: |
-#            echo "Preparing deployment environment..."
-#            ...
-#
-#      - name: Start application
-#        uses: appleboy/ssh-action@v1.0.3
-#        with:
-#          host: ${{ env.EC2_HOST }}
-#          username: ${{ env.EC2_USER }}
-#          key: ${{ secrets.SSH_PRIVATE_KEY }}
-#          port: 22
-#          script: |
-#            ...
-#
-#      - name: Health Check
-#        run: |
-#          ...
-
-# Commented out notification job
-#  notify:
-#    name: Notify Deployment
-#    runs-on: ubuntu-latest
-#    needs: [test, build, deploy]
-#    if: always()
-#    steps:
-#      - name: Deployment Success
-#        if: needs.deploy.result == 'success'
-#        run: |
-#          ...
-#      - name: Deployment Failed
-#        if: needs.deploy.result == 'failure'
-#        run: |
-#          ...

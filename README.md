@@ -14,7 +14,7 @@ This project addresses a scenario-based assessment for a mobile agent applicatio
 - **Current Status**: ✅ Fully implemented (uses phone number)
 
 **(b) Agent Profile Information**
-- **Endpoint**: `GET /api/v1/agents/{id}/details` 
+- **Endpoint**: `GET /api/v1/agents/{id}` 
 - **Returns**: Complete agent profile with location (region, district, ward), status, and user details
 - **Current Status**: ✅ Fully implemented
 
@@ -112,7 +112,8 @@ The application follows a layered architecture pattern:
 - Docker (for databases)
 - Maven (optional - we include Maven Wrapper)
 
-### 🚀 Super Easy Setup (First Time)
+
+### 🚀 Setup (First Time)
 ```bash
 # This checks everything, installs dependencies, starts databases, builds the app
 make setup
@@ -121,7 +122,7 @@ make setup
 make run
 ```
 
-### 🏃‍♂️ Daily Development (After Setup)
+### 🏃‍♂️  (After Setup)
 ```bash
 # Quick start for daily work - starts services and runs the app
 make start-app
@@ -170,7 +171,6 @@ docker-compose -f src/main/docker/services.yml up -d
 
 ### 🌐 Access the Application
 - **Application**: http://localhost:8080
-- **Health Check**: http://localhost:8080/management/health
 - **Database**: PostgreSQL on localhost:5432
 - **Search**: Elasticsearch on localhost:9200
 - **Email Testing**: MailHog on localhost:8025
@@ -266,29 +266,259 @@ Structured logging with correlation IDs for request tracing:
 - Memory and CPU usage metrics
 - Custom business metrics for registration rates
 
-## Deployment
 
-### Docker Support
-```dockerfile
-FROM openjdk:17-jre-slim
-COPY target/customer-registration-system.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app.jar"]
+---
+
+## 📖 Instructions & API Collections
+
+### API Collections
+
+This project includes a ready-to-use **Postman collection** for all endpoints:
+
+```
+Customer Registration System API.postman_collection.json
 ```
 
-### Environment Configuration
-- Development: Local PostgreSQL, embedded Elasticsearch
-- Staging: Containerized services with Docker Compose
-- Production: Kubernetes deployment with external databases
+> Import this collection into Postman to quickly explore all API endpoints, including authentication, agent management, and customer registration.
 
-## Contributing
+---
 
-1. Follow the established code style and patterns
-2. Ensure all tests pass before submitting PRs
-3. Update documentation for any API changes
-4. Include integration tests for new features
-5. Verify security implications of changes
+### Swagger Documentation
 
-## License
+After starting the application, you can access the **Swagger UI** here:
 
-Internal use only - Proprietary software for telecommunications customer management.
+[http://localhost:8080/swagger-ui/index.html?urls.primaryName=springdocDefault#/](http://localhost:8080/swagger-ui/index.html?urls.primaryName=springdocDefault#/)
+
+* Swagger provides comprehensive details for **all endpoints**, request/response schemas, and authentication requirements.
+* You can even test endpoints directly from the UI.
+
+---
+
+### Built-in Test Users
+
+For development and testing, the system comes with predefined users:
+
+```json
+{
+  "username": "admin",
+  "password": "admin",
+  "rememberMe": true
+}
+```
+
+```json
+{
+  "username": "0721015320",
+  "password": "password",
+  "rememberMe": true
+}
+```
+
+```json
+{
+  "username": "0711015320",
+  "password": "password",
+  "rememberMe": true
+}
+```
+
+> Use these accounts to explore authentication, agent creation, and customer registration flows.
+
+---
+
+### Sample Curl Flow
+
+#### 1️⃣ Authenticate
+
+```bash
+curl --location 'http://localhost:8080/api/authenticate' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "username": "admin",
+    "password": "admin",
+    "rememberMe": true
+}'
+```
+
+Sample response:
+
+```json
+{
+    "status": "SUCCESS",
+    "message": "Authentication successful",
+    "data": {
+        "access_token": "eyJhbGciOiJIUzUxMiJ9...",
+        "expires_in": 2592000,
+        "token_type": "Bearer"
+    },
+    "timestamp": "2025-09-29T10:33:59.730058Z"
+}
+```
+
+---
+
+#### 2️⃣ Create an Agent (as Admin)
+
+```bash
+curl --location 'http://localhost:8080/api/v1/agents/register' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <ACCESS_TOKEN>' \
+--data-raw '{
+    "login": "0711015320",
+    "phoneNumber": "0711015320",
+    "firstName": "James",
+    "lastName": "Mwalimu",
+    "email": "bonss.mlolymqiu@vodacomt.gom",
+    "region": "Dodoma",
+    "district": "Dodoma Urban",
+    "ward": "Kikuyu"
+}'
+```
+
+* After creating the agent, an **email** is sent (in development, check MailHog: [http://localhost:8025/#](http://localhost:8025/#))
+* The agent clicks the link to **change password** before first login.
+
+Sample response:
+
+```json
+{
+    "status": "CREATED",
+    "message": "Agent registered successfully",
+    "data": {
+        "user": {
+            "id": "64bbd1e0-98ff-4b4f-acfc-7352a73f4021",
+            "login": "0711015320",
+            "firstName": "James",
+            "lastName": "Mwalimu",
+            "email": "bonss.mlolymqiu@vodacomt.gom",
+            "activated": true,
+            "authorities": ["ROLE_AGENT"]
+        },
+        "agent": {
+            "id": "dfc41582-3c4f-4f06-bd74-09e61593b69d",
+            "status": "ACTIVE",
+            "region": "Dodoma",
+            "district": "Dodoma Urban",
+            "ward": "Kikuyu"
+        }
+    }
+}
+```
+
+---
+
+#### 3️⃣ Create a Customer (as Agent)
+
+```bash
+curl --location 'http://localhost:8080/api/v1/customers' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <ACCESS_TOKEN>' \
+--data-raw '{
+    "firstName": "Mona",
+    "middleName": "Maggio",
+    "lastName": "Crooks",
+    "dateOfBirth": "2002-06-26",
+    "nidaNumber": "20020626392163244990",
+    "region": "Murazik Meadow",
+    "district": "West Nataliaton",
+    "ward": "West Adelbert"
+}'
+```
+
+Sample response:
+
+```json
+{
+  "status": "CREATED",
+  "message": "Customer created successfully",
+  "data": {
+      "id": "cd03f207-e6c4-4c82-8b95-30722009e485",
+      "firstName": "Mona",
+      "middleName": "Maggio",
+      "lastName": "Crooks",
+      "dateOfBirth": "2002-06-26",
+      "nidaNumber": "20020626392163244990",
+      "region": "Murazik Meadow",
+      "district": "West Nataliaton",
+      "ward": "West Adelbert",
+      "createdBy": "0711015320",
+      "createdDate": "2025-09-29T09:46:56.676848Z",
+      "lastModifiedBy": "0711015320",
+      "lastModifiedDate": "2025-09-29T09:46:56.676848Z"
+  },
+  "timestamp": "2025-09-29T09:46:56.822872Z"
+}
+```
+
+> You can explore **all other endpoints** using Swagger or the Postman collection.
+
+---
+
+### Development Utilities
+
+* **MailHog** for email testing: [http://localhost:8025/#](http://localhost:8025/#)
+* **Swagger** for API exploration: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+* **Database**: PostgreSQL (localhost:5432)
+* **Search**: Elasticsearch (localhost:9200)
+
+
+---
+
+### 📊 Example: Fetching Activity Logs
+
+Agents can view their activity history with a simple API call:
+
+#### Curl Request
+
+```bash
+curl --location 'http://localhost:8080/api/v1/activity-logs/me' \
+--header 'Accept: */*' \
+--header 'Authorization: Bearer <ACCESS_TOKEN>'
+```
+
+#### Sample Response
+
+```json
+[
+    {
+        "id": "b379afcd-d672-45ce-a358-04cf2749b449",
+        "actionType": "AGENT_LOGIN",
+        "entityType": "Agent",
+        "entityId": null,
+        "description": "Agent 0711015320 logged in successfully",
+        "ipAddress": "0:0:0:0:0:0:0:1",
+        "userAgent": "PostmanRuntime/7.45.0",
+        "timestamp": "2025-09-29T10:33:47.319615Z",
+        "sessionId": null,
+        "status": "SUCCESS",
+        "errorMessage": null,
+        "createdBy": "0711015320",
+        "createdDate": "2025-09-29T10:33:47.333423Z",
+        "lastModifiedBy": "0711015320",
+        "lastModifiedDate": "2025-09-29T10:33:47.333423Z"
+    },
+    {
+        "id": "36fa4c01-771b-4873-b999-031f40bd1801",
+        "actionType": "AGENT_LOGIN",
+        "entityType": "Agent",
+        "entityId": null,
+        "description": "Agent 0711015320 logged in successfully",
+        "ipAddress": "0:0:0:0:0:0:0:1",
+        "userAgent": "PostmanRuntime/7.45.0",
+        "timestamp": "2025-09-29T09:34:59.972425Z",
+        "sessionId": null,
+        "status": "SUCCESS",
+        "errorMessage": null,
+        "createdBy": "0711015320",
+        "createdDate": "2025-09-29T09:34:59.974401Z",
+        "lastModifiedBy": "0711015320",
+        "lastModifiedDate": "2025-09-29T09:34:59.974401Z"
+    }
+]
+```
+
+> This and may other endpoint supports **pagination and filtering** via query parameters. It logs actions like login, logout, customer creation, and other agent operations.
+
+---
+
+
