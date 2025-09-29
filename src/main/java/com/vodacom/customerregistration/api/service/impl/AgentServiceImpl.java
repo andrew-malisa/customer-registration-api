@@ -113,7 +113,7 @@ public class AgentServiceImpl implements AgentService {
     public AgentRegistrationResponseDTO registerAgentWithUser(AgentRegistrationDTO registrationDTO) {
         LOG.debug("Request to register Agent with User: {}", registrationDTO);
 
-        AdminUserDTO adminUserDTO = agentMapper.toAdminUserDTO(registrationDTO);
+        AdminUserDTO adminUserDTO = agentMapper.toAdminUserDTOWithRoles(registrationDTO);
 
         User createdUser = userService.createUser(adminUserDTO);
         mailService.sendCreationEmail(createdUser);

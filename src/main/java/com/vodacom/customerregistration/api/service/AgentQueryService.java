@@ -81,7 +81,6 @@ public class AgentQueryService extends QueryService<Agent> {
                 buildStringSpecification(criteria.getPhoneNumber(), Agent_.phoneNumber),
                 buildSpecification(criteria.getStatus(), Agent_.status),
                 buildSpecification(criteria.getUserId(), root -> root.join(Agent_.user, JoinType.LEFT).get(User_.id)),
-                buildSpecification(criteria.getCustomerId(), root -> root.join(Agent_.customers, JoinType.LEFT).get(Customer_.id)),
                 buildStringSpecification(criteria.getRegion(), Agent_.region),
                 buildStringSpecification(criteria.getDistrict(), Agent_.district),
                 buildStringSpecification(criteria.getWard(), Agent_.ward)

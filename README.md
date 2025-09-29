@@ -46,34 +46,71 @@ The application follows a layered architecture pattern:
 
 ### Prerequisites
 - Java 17 or higher
-- PostgreSQL 13+
-- Elasticsearch 8.x (optional for search features)
-- Maven 3.8+
+- Docker (for databases)
+- Maven (optional - we include Maven Wrapper)
 
-### Database Setup
-```sql
-CREATE DATABASE customer_registration;
-CREATE USER app_user WITH PASSWORD 'secure_password';
-GRANT ALL PRIVILEGES ON DATABASE customer_registration TO app_user;
-```
-
-### Running the Application
+### 🚀 Super Easy Setup (First Time)
 ```bash
-# Development mode
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+# This checks everything, installs dependencies, starts databases, builds the app
+make setup
 
-# Production mode
-mvn spring-boot:run -Dspring-boot.run.profiles=prod
+# Then start the application
+make run
 ```
 
-### Testing
+### 🏃‍♂️ Daily Development (After Setup)
 ```bash
-# Run unit tests
-mvn test
-
-# Run integration tests
-mvn verify
+# Quick start for daily work - starts services and runs the app
+make start-app
 ```
+
+### 📋 All Available Commands
+```bash
+# See all available commands
+make help
+
+# Setup & Prerequisites
+make setup         # Complete first-time setup
+make check-prereqs # Check Java, Maven, Docker are installed
+
+# Development
+make start-app     # Quick daily startup (services + app)
+make run          # Start the application
+make dev          # Start in development mode with hot reload
+make build        # Build the application
+make test         # Run unit tests
+make integration  # Run integration tests
+
+# Database Services (PostgreSQL + Elasticsearch + MailHog)
+make docker-up    # Start all database services
+make docker-down  # Stop all database services
+
+# Utilities
+make clean        # Clean build artifacts
+make stop         # Stop running application
+make status       # Check if application is running
+make logs         # View application logs
+make info         # Show environment info
+```
+
+### 🔧 Manual Setup (if you prefer)
+```bash
+# 1. Start the databases
+docker-compose -f src/main/docker/services.yml up -d
+
+# 2. Install dependencies
+./mvnw dependency:resolve
+
+# 3. Run the application
+./mvnw spring-boot:run
+```
+
+### 🌐 Access the Application
+- **Application**: http://localhost:8080
+- **Health Check**: http://localhost:8080/management/health
+- **Database**: PostgreSQL on localhost:5432
+- **Search**: Elasticsearch on localhost:9200
+- **Email Testing**: MailHog on localhost:8025
 
 ## Configuration
 

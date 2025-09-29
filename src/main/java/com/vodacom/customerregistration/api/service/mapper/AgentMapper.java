@@ -21,7 +21,6 @@ public interface AgentMapper extends EntityMapper<AgentDTO, Agent> {
     Agent toEntity(AgentDTO agentDTO);
 
     @Mapping(target = "activated", constant = "true")
-    @Mapping(target = "authorities", ignore = true)
     @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
@@ -29,6 +28,14 @@ public interface AgentMapper extends EntityMapper<AgentDTO, Agent> {
     @Mapping(target = "lastModifiedBy", ignore = true)
     @Mapping(target = "lastModifiedDate", ignore = true)
     AdminUserDTO toAdminUserDTO(AgentRegistrationDTO registrationDTO);
+    
+    default AdminUserDTO toAdminUserDTOWithRoles(AgentRegistrationDTO registrationDTO) {
+        AdminUserDTO userDTO = toAdminUserDTO(registrationDTO);
+        if (userDTO != null) {
+            userDTO.setAuthorities(java.util.Set.of("ROLE_AGENT"));
+        }
+        return userDTO;
+    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)

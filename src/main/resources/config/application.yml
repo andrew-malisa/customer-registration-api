@@ -94,6 +94,7 @@ spring:
         bootstrap-mode: deferred
   jpa:
     open-in-view: false
+    defer-datasource-initialization: true
     properties:
       hibernate.jdbc.time_zone: UTC
       hibernate.timezone.default_storage: NORMALIZE
@@ -114,6 +115,12 @@ spring:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+      continue-on-error: false
+      separator: ";"
   messages:
     basename: i18n/messages
   main:

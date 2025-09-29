@@ -3,6 +3,7 @@ package com.vodacom.customerregistration.api.config;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import com.vodacom.customerregistration.api.security.*;
+import static com.vodacom.customerregistration.api.security.AuthoritiesConstants.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -51,8 +52,26 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/api/account/reset-password/finish")).permitAll()
                     .requestMatchers(mvc.pattern("/account/reset/finish")).permitAll()
                     .requestMatchers(mvc.pattern("/account/reset/finish.html")).permitAll()
-                    .requestMatchers(mvc.pattern("/api/admin/**")).permitAll()
-                    .requestMatchers(mvc.pattern("/api/**")).permitAll()
+                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/v1/agents/register")).permitAll()
+
+                    .requestMatchers(mvc.pattern("/api/admin/**")).hasAuthority(ADMIN)
+                    .requestMatchers(mvc.pattern("/api/v1/users/**")).hasAuthority(ADMIN)
+
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/v1/agents/**")).hasAnyAuthority(ADMIN, AGENT)
+                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/v1/agents")).hasAuthority(ADMIN)
+                    .requestMatchers(mvc.pattern(HttpMethod.PUT, "/api/v1/agents/**")).hasAnyAuthority(ADMIN, AGENT)
+                    .requestMatchers(mvc.pattern(HttpMethod.PATCH, "/api/v1/agents/**")).hasAnyAuthority(ADMIN, AGENT)
+                    .requestMatchers(mvc.pattern(HttpMethod.DELETE, "/api/v1/agents/**")).hasAuthority(ADMIN)
+
+                    .requestMatchers(mvc.pattern("/api/v1/customers/**")).hasAnyAuthority(ADMIN, AGENT)
+
+                    .requestMatchers(mvc.pattern(HttpMethod.GET, "/api/v1/activity-logs/**")).hasAnyAuthority(ADMIN, AGENT)
+                    .requestMatchers(mvc.pattern(HttpMethod.POST, "/api/v1/activity-logs/**")).hasAuthority(ADMIN)
+                    .requestMatchers(mvc.pattern(HttpMethod.PUT, "/api/v1/activity-logs/**")).hasAuthority(ADMIN)
+                    .requestMatchers(mvc.pattern(HttpMethod.DELETE, "/api/v1/activity-logs/**")).hasAuthority(ADMIN)
+
+                    .requestMatchers(mvc.pattern("/api/account")).authenticated()
+                    .requestMatchers(mvc.pattern("/api/account/**")).authenticated()
                     .requestMatchers(mvc.pattern("/v3/api-docs/**")).permitAll()
                     .requestMatchers(mvc.pattern("/swagger-ui/**")).permitAll()
                     .requestMatchers(mvc.pattern("/swagger-ui.html")).permitAll()
@@ -62,7 +81,12 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern("/management/health/**")).permitAll()
                     .requestMatchers(mvc.pattern("/management/info")).permitAll()
                     .requestMatchers(mvc.pattern("/management/prometheus")).permitAll()
-                    .requestMatchers(mvc.pattern("/management/**")).permitAll()
+
+                    .requestMatchers(mvc.pattern("/management/**")).hasAuthority(ADMIN)
+
+                    .requestMatchers(mvc.pattern("/api/**")).authenticated()
+
+                    .anyRequest().permitAll()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(exceptions ->

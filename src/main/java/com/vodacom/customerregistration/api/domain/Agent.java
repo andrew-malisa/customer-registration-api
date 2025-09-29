@@ -1,13 +1,10 @@
 package com.vodacom.customerregistration.api.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vodacom.customerregistration.api.domain.enumeration.AgentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.GenericGenerator;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * A Agent.
@@ -43,10 +40,6 @@ public class Agent extends AbstractAuditingEntity<Long> implements Serializable 
     @JoinColumn(unique = true)
     private User user;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @org.springframework.data.annotation.Transient
-    @JsonIgnoreProperties(value = { "region", "district", "ward", "registeredBy" }, allowSetters = true)
-    private Set<Customer> customers = new HashSet<>();
 
     @Size(max = 100)
     @Column(name = "region", length = 100)
@@ -116,36 +109,6 @@ public class Agent extends AbstractAuditingEntity<Long> implements Serializable 
         return this;
     }
 
-    public Set<Customer> getCustomers() {
-        return this.customers;
-    }
-
-//    public void setCustomers(Set<Customer> customers) {
-//        if (this.customers != null) {
-//            this.customers.forEach(i -> i.setRegisteredBy(null));
-//        }
-//        if (customers != null) {
-//            customers.forEach(i -> i.setRegisteredBy(this));
-//        }
-//        this.customers = customers;
-//    }
-
-//    public Agent customers(Set<Customer> customers) {
-//        this.setCustomers(customers);
-//        return this;
-//    }
-
-//    public Agent addCustomer(Customer customer) {
-//        this.customers.add(customer);
-//        customer.setRegisteredBy(this);
-//        return this;
-//    }
-//
-//    public Agent removeCustomer(Customer customer) {
-//        this.customers.remove(customer);
-//        customer.setRegisteredBy(null);
-//        return this;
-//    }
 
     public String getRegion() {
         return this.region;
