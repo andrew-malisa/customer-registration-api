@@ -63,7 +63,6 @@ public class Agent extends AbstractAuditingEntity<Long> implements Serializable 
     @org.springframework.data.elasticsearch.annotations.Field(type = org.springframework.data.elasticsearch.annotations.FieldType.Text)
     private String ward;
 
-    // jhipster-needle-entity-add-field - JHipster will add fields here
 
     public Long getId() {
         return this.id;
