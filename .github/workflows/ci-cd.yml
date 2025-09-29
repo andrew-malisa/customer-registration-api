@@ -9,10 +9,11 @@ on:
     types: [ published ]
 
 env:
-  AWS_REGION: eu-north-1
-  ECR_REPOSITORY: customer-registration-api
+  AWS_REGION: eu-north-1  # Kept if needed elsewhere, but not used for registry
+  DOCKER_REPO: customer-registration-api
   EC2_HOST: ec2-13-60-91-204.eu-north-1.compute.amazonaws.com
   EC2_USER: ubuntu
+  APP_DIR: /opt/customer-registration-api
 
 jobs:
   test:
@@ -82,10 +83,13 @@ jobs:
         name: codecov-umbrella
 
   build:
-    name: Build Application
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' || github.event_name == 'release'
+    permissions:
+      contents: read
+      packages: write  # For GHCR push
 
     steps:
     - name: Checkout code
@@ -105,14 +109,21 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
 
-    - name: Build application
+    - name: Build application JAR
       run: mvn clean package -DskipTests
 
-    - name: Upload JAR artifact
-      uses: actions/upload-artifact@v4
+    - name: Login to GHCR
+      uses: docker/login-action@v3
       with:
-        name: application-jar
-        path: target/*.jar
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build Docker image
+      run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest .
+
+    - name: Push image to GHCR
+      run: docker push ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest
 
   deploy:
     name: Deploy to EC2
@@ -122,12 +133,6 @@ jobs:
     environment: production
 
     steps:
-    - name: Download JAR artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: application-jar
-        path: ./
-
     - name: Prepare EC2 environment
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -136,36 +141,30 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         timeout: 600s
+        command_timeout: 30m
         script: |
           echo "Preparing deployment environment..."
           
-          # Install Java if not present
-          if ! command -v java &> /dev/null; then
-            echo "Installing Java..."
+          # Install Docker if not present
+          if ! command -v docker &> /dev/null; then
+            echo "Installing Docker..."
             export DEBIAN_FRONTEND=noninteractive
             sudo apt-get update -qq
-            sudo apt-get install -y -qq openjdk-17-jre
-            echo "Java installation completed"
+            sudo apt-get install -y -qq ca-certificates curl gnupg lsb-release
+            sudo mkdir -p /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
+            sudo usermod -aG docker ${{ env.EC2_USER }}
+            echo "Docker installation completed"
           fi
 
           # Create app directory
-          sudo mkdir -p /opt/customer-registration-api
-          sudo chown ubuntu:ubuntu /opt/customer-registration-api
-          
-          # Stop existing application
-          sudo pkill -f customer-registration || true
+          sudo mkdir -p ${{ env.APP_DIR }}
+          sudo chown ${{ env.EC2_USER }}:${{ env.EC2_USER }} ${{ env.APP_DIR }}
           
           echo "Environment preparation completed"
-
-    - name: Copy JAR to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ env.EC2_HOST }}
-        username: ${{ env.EC2_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        source: "*.jar"
-        target: "/opt/customer-registration-api/"
 
     - name: Start application
       uses: appleboy/ssh-action@v1.0.3
@@ -175,26 +174,109 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          cd /opt/customer-registration-api
+          cd ${{ env.APP_DIR }}
           
-          # Create application.properties if needed
-          cat > application.properties << EOF
-          server.port=8080
-          spring.profiles.active=prod
-          logging.level.root=INFO
+          # Write docker-compose.yml (GHCR image, no ECR/AWS login)
+          cat > docker-compose.yml << EOF
+          version: '3.8'
+
+          name: customerregistrationsystem
+
+          services:
+            app:
+              image: ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest
+              environment:
+                - _JAVA_OPTIONS=-Xmx512m -Xms256m
+                - SPRING_PROFILES_ACTIVE=prod,api-docs
+                - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
+                - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/CustomerRegistrationSystem
+                - SPRING_DATASOURCE_USERNAME=CustomerRegistrationSystem
+                - SPRING_DATASOURCE_PASSWORD=
+                - SPRING_LIQUIBASE_URL=jdbc:postgresql://postgresql:5432/CustomerRegistrationSystem
+                - SPRING_LIQUIBASE_USER=CustomerRegistrationSystem
+                - SPRING_LIQUIBASE_PASSWORD=
+                - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+                - SPRING_MAIL_HOST=mailhog
+                - SPRING_MAIL_PORT=1025
+              ports:
+                - 8080:8080
+              healthcheck:
+                test:
+                  - CMD
+                  - curl
+                  - -f
+                  - http://localhost:8080/management/health
+                interval: 5s
+                timeout: 5s
+                retries: 40
+              depends_on:
+                postgresql:
+                  condition: service_healthy
+                elasticsearch:
+                  condition: service_healthy
+                mailhog:
+                  condition: service_healthy
+
+            postgresql:
+              image: postgres:18
+              environment:
+                - POSTGRES_USER=CustomerRegistrationSystem
+                - POSTGRES_DB=CustomerRegistrationSystem
+                - POSTGRES_HOST_AUTH_METHOD=trust
+              healthcheck:
+                test: ['CMD-SHELL', 'pg_isready -U \$\${POSTGRES_USER}']
+                interval: 5s
+                timeout: 5s
+                retries: 10
+              volumes:
+                - ./volumes/postgres_data:/var/lib/postgresql/data
+
+            elasticsearch:
+              image: docker.elastic.co/elasticsearch/elasticsearch:9.1.4
+              ports:
+                - 9200:9200
+                - 9300:9300
+              environment:
+                - 'ES_JAVA_OPTS=-Xms256m -Xmx256m'
+                - 'discovery.type=single-node'
+                - 'xpack.security.enabled=false'
+              healthcheck:
+                test: ['CMD', 'curl', '-f', 'http://localhost:9200/_cluster/health?wait_for_status=green&timeout=10s']
+                interval: 5s
+                timeout: 10s
+                retries: 10
+              volumes:
+                - ./volumes/elasticsearch_data:/usr/share/elasticsearch/data
+
+            mailhog:
+              image: mailhog/mailhog:v1.0.1
+              ports:
+                - 1025:1025
+                - 8025:8025
+              healthcheck:
+                test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
+                interval: 5s
+                timeout: 5s
+                retries: 10
+
           EOF
 
-          # Start application in background
-          nohup java -jar *.jar --spring.config.location=application.properties > app.log 2>&1 &
+          # Create volumes dir
+          mkdir -p volumes/postgres_data volumes/elasticsearch_data
 
-          # Wait a bit for startup
+          # Deploy
+          docker compose down || true
+          docker compose pull
+          docker compose up -d
+
+          # Wait for startup
           sleep 10
 
-          # Check if application is running
-          if pgrep -f "customer-registration" > /dev/null; then
-            echo "Application started successfully"
+          # Check if app is running
+          if docker compose ps | grep -q app | grep Up; then
+            echo "Application stack started successfully"
           else
-            echo "Failed to start application"
+            echo "Failed to start application stack"
             exit 1
           fi
 
@@ -212,7 +294,6 @@ jobs:
         echo "Health check failed after 5 attempts"
         exit 1
 
-
   notify:
     name: Notify Deployment
     runs-on: ubuntu-latest
@@ -223,12 +304,13 @@ jobs:
     - name: Deployment Success
       if: needs.deploy.result == 'success'
       run: |
-        echo "🚀 Deployment successful!"
+        echo "🚀 Docker Compose deployment successful!"
         echo "Application is now running at: http://${{ env.EC2_HOST }}:8080"
         echo "Health check: http://${{ env.EC2_HOST }}:8080/management/health"
+        echo "Mailhog UI (if needed): http://${{ env.EC2_HOST }}:8025"
 
     - name: Deployment Failed
       if: needs.deploy.result == 'failure'
       run: |
-        echo "❌ Deployment failed!"
+        echo "❌ Docker Compose deployment failed!"
         exit 1
