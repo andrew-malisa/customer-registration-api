@@ -135,19 +135,29 @@ jobs:
         username: ${{ env.EC2_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
+        command_timeout: 10m
         script: |
           # Install Java if not present
           if ! command -v java &> /dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y openjdk-17-jre
+            echo "Installing Java..."
+            export DEBIAN_FRONTEND=noninteractive
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq openjdk-17-jre
+            echo "Java installation completed"
+          else
+            echo "Java already installed"
           fi
 
           # Create app directory
           sudo mkdir -p /opt/customer-registration-api
           sudo chown $USER:$USER /opt/customer-registration-api
+          echo "App directory ready"
 
           # Stop existing application
+          echo "Stopping existing application..."
           sudo pkill -f customer-registration || true
+          sleep 2
+          echo "Deployment preparation completed"
 
     - name: Copy JAR to server
       uses: appleboy/scp-action@v0.1.7
