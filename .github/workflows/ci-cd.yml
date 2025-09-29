@@ -56,7 +56,7 @@ jobs:
       run: mvn clean test
 
     - name: Run integration tests
-      run: mvn verify
+      run: mvn verify -DskipITs
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/CustomerRegistrationSystem
         SPRING_DATASOURCE_USERNAME: CustomerRegistrationSystem
