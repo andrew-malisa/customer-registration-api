@@ -9,7 +9,7 @@ on:
     types: [ published ]
 
 env:
-  AWS_REGION: eu-north-1  # Kept if needed elsewhere, but not used for registry
+  AWS_REGION: eu-north-1
   DOCKER_REPO: customer-registration-api
   EC2_HOST: ec2-13-60-91-204.eu-north-1.compute.amazonaws.com
   EC2_USER: ubuntu
@@ -40,47 +40,47 @@ jobs:
           - 5432:5432
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'corretto'
-        cache: maven
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: maven
 
-    - name: Cache Maven dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
 
-    - name: Run unit tests
-      run: mvn clean test
+      - name: Run unit tests
+        run: mvn clean test
 
-    - name: Run integration tests
-      run: mvn verify -DskipITs
-      env:
-        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/CustomerRegistrationSystem
-        SPRING_DATASOURCE_USERNAME: CustomerRegistrationSystem
+      - name: Run integration tests
+        run: mvn verify -DskipITs
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/CustomerRegistrationSystem
+          SPRING_DATASOURCE_USERNAME: CustomerRegistrationSystem
 
-    - name: Generate test report
-      uses: dorny/test-reporter@v1
-      if: success() || failure()
-      with:
-        name: Maven Tests
-        path: target/surefire-reports/*.xml
-        reporter: java-junit
+      - name: Generate test report
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Maven Tests
+          path: target/surefire-reports/*.xml
+          reporter: java-junit
 
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v4
-      if: success()
-      with:
-        file: target/site/jacoco/jacoco.xml
-        flags: unittests
-        name: codecov-umbrella
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: success()
+        with:
+          file: target/site/jacoco/jacoco.xml
+          flags: unittests
+          name: codecov-umbrella
 
   build:
     name: Build and Push Docker Image
@@ -89,229 +89,89 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'release'
     permissions:
       contents: read
-      packages: write  # For GHCR push
+      packages: write
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'corretto'
-        cache: maven
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: maven
 
-    - name: Cache Maven dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
 
-    - name: Build application JAR
-      run: mvn clean package -DskipTests -DskipProperties=true
+      - name: Build application JAR
+        run: mvn clean package -DskipTests -DskipProperties=true
 
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Login to GHCR
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Docker image
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest .
 
-    - name: Build Docker image
-      run: docker build -t ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest .
+      - name: Push image to GHCR
+        run: docker push ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest
 
-    - name: Push image to GHCR
-      run: docker push ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest
+# Commented out deployment to EC2
+#  deploy:
+#    name: Deploy to EC2
+#    runs-on: ubuntu-latest
+#    needs: build
+#    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
+#    environment: production
+#    steps:
+#      - name: Prepare EC2 environment
+#        uses: appleboy/ssh-action@v1.0.3
+#        with:
+#          host: ${{ env.EC2_HOST }}
+#          username: ${{ env.EC2_USER }}
+#          key: ${{ secrets.SSH_PRIVATE_KEY }}
+#          port: 22
+#          timeout: 600s
+#          command_timeout: 30m
+#          script: |
+#            echo "Preparing deployment environment..."
+#            ...
+#
+#      - name: Start application
+#        uses: appleboy/ssh-action@v1.0.3
+#        with:
+#          host: ${{ env.EC2_HOST }}
+#          username: ${{ env.EC2_USER }}
+#          key: ${{ secrets.SSH_PRIVATE_KEY }}
+#          port: 22
+#          script: |
+#            ...
+#
+#      - name: Health Check
+#        run: |
+#          ...
 
-  deploy:
-    name: Deploy to EC2
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
-    environment: production
-
-    steps:
-    - name: Prepare EC2 environment
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ env.EC2_HOST }}
-        username: ${{ env.EC2_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        timeout: 600s
-        command_timeout: 30m
-        script: |
-          echo "Preparing deployment environment..."
-          
-          # Install Docker if not present
-          if ! command -v docker &> /dev/null; then
-            echo "Installing Docker..."
-            export DEBIAN_FRONTEND=noninteractive
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq ca-certificates curl gnupg lsb-release
-            sudo mkdir -p /etc/apt/keyrings
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
-            sudo usermod -aG docker ${{ env.EC2_USER }}
-            echo "Docker installation completed"
-          fi
-
-          # Create app directory
-          sudo mkdir -p ${{ env.APP_DIR }}
-          sudo chown ${{ env.EC2_USER }}:${{ env.EC2_USER }} ${{ env.APP_DIR }}
-          
-          echo "Environment preparation completed"
-
-    - name: Start application
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ env.EC2_HOST }}
-        username: ${{ env.EC2_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        script: |
-          cd ${{ env.APP_DIR }}
-          
-          # Write docker-compose.yml (GHCR image, no ECR/AWS login)
-          cat > docker-compose.yml << EOF
-          version: '3.8'
-
-          name: customerregistrationsystem
-
-          services:
-            app:
-              image: ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_REPO }}:latest
-              environment:
-                - _JAVA_OPTIONS=-Xmx512m -Xms256m
-                - SPRING_PROFILES_ACTIVE=prod,api-docs
-                - MANAGEMENT_PROMETHEUS_METRICS_EXPORT_ENABLED=true
-                - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/CustomerRegistrationSystem
-                - SPRING_DATASOURCE_USERNAME=CustomerRegistrationSystem
-                - SPRING_DATASOURCE_PASSWORD=
-                - SPRING_LIQUIBASE_URL=jdbc:postgresql://postgresql:5432/CustomerRegistrationSystem
-                - SPRING_LIQUIBASE_USER=CustomerRegistrationSystem
-                - SPRING_LIQUIBASE_PASSWORD=
-                - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
-                - SPRING_MAIL_HOST=mailhog
-                - SPRING_MAIL_PORT=1025
-              ports:
-                - 8080:8080
-              healthcheck:
-                test:
-                  - CMD
-                  - curl
-                  - -f
-                  - http://localhost:8080/management/health
-                interval: 5s
-                timeout: 5s
-                retries: 40
-              depends_on:
-                postgresql:
-                  condition: service_healthy
-                elasticsearch:
-                  condition: service_healthy
-                mailhog:
-                  condition: service_healthy
-
-            postgresql:
-              image: postgres:18
-              environment:
-                - POSTGRES_USER=CustomerRegistrationSystem
-                - POSTGRES_DB=CustomerRegistrationSystem
-                - POSTGRES_HOST_AUTH_METHOD=trust
-              healthcheck:
-                test: ['CMD-SHELL', 'pg_isready -U \$\${POSTGRES_USER}']
-                interval: 5s
-                timeout: 5s
-                retries: 10
-              volumes:
-                - ./volumes/postgres_data:/var/lib/postgresql/data
-
-            elasticsearch:
-              image: docker.elastic.co/elasticsearch/elasticsearch:9.1.4
-              ports:
-                - 9200:9200
-                - 9300:9300
-              environment:
-                - 'ES_JAVA_OPTS=-Xms256m -Xmx256m'
-                - 'discovery.type=single-node'
-                - 'xpack.security.enabled=false'
-              healthcheck:
-                test: ['CMD', 'curl', '-f', 'http://localhost:9200/_cluster/health?wait_for_status=green&timeout=10s']
-                interval: 5s
-                timeout: 10s
-                retries: 10
-              volumes:
-                - ./volumes/elasticsearch_data:/usr/share/elasticsearch/data
-
-            mailhog:
-              image: mailhog/mailhog:v1.0.1
-              ports:
-                - 1025:1025
-                - 8025:8025
-              healthcheck:
-                test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
-                interval: 5s
-                timeout: 5s
-                retries: 10
-
-          EOF
-
-          # Create volumes dir
-          mkdir -p volumes/postgres_data volumes/elasticsearch_data
-
-          # Deploy
-          docker compose down || true
-          docker compose pull
-          docker compose up -d
-
-          # Wait for startup
-          sleep 10
-
-          # Check if app is running
-          if docker compose ps | grep -q app | grep Up; then
-            echo "Application stack started successfully"
-          else
-            echo "Failed to start application stack"
-            exit 1
-          fi
-
-    - name: Health Check
-      run: |
-        sleep 60
-        for i in {1..5}; do
-          if curl -f http://${{ env.EC2_HOST }}:8080/management/health; then
-            echo "Health check passed!"
-            exit 0
-          fi
-          echo "Health check attempt $i failed, retrying in 10 seconds..."
-          sleep 10
-        done
-        echo "Health check failed after 5 attempts"
-        exit 1
-
-  notify:
-    name: Notify Deployment
-    runs-on: ubuntu-latest
-    needs: [test, build, deploy]
-    if: always()
-
-    steps:
-    - name: Deployment Success
-      if: needs.deploy.result == 'success'
-      run: |
-        echo "🚀 Docker Compose deployment successful!"
-        echo "Application is now running at: http://${{ env.EC2_HOST }}:8080"
-        echo "Health check: http://${{ env.EC2_HOST }}:8080/management/health"
-        echo "Mailhog UI (if needed): http://${{ env.EC2_HOST }}:8025"
-
-    - name: Deployment Failed
-      if: needs.deploy.result == 'failure'
-      run: |
-        echo "❌ Docker Compose deployment failed!"
-        exit 1
+# Commented out notification job
+#  notify:
+#    name: Notify Deployment
+#    runs-on: ubuntu-latest
+#    needs: [test, build, deploy]
+#    if: always()
+#    steps:
+#      - name: Deployment Success
+#        if: needs.deploy.result == 'success'
+#        run: |
+#          ...
+#      - name: Deployment Failed
+#        if: needs.deploy.result == 'failure'
+#        run: |
+#          ...
