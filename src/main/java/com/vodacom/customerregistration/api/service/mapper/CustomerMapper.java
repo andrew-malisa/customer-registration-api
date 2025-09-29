@@ -2,6 +2,7 @@ package com.vodacom.customerregistration.api.service.mapper;
 
 import com.vodacom.customerregistration.api.domain.Customer;
 import com.vodacom.customerregistration.api.service.dto.CustomerDTO;
+import com.vodacom.customerregistration.api.service.dto.CustomerResponseDTO;
 import org.mapstruct.*;
 
 /**
@@ -10,6 +11,8 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface CustomerMapper extends EntityMapper<CustomerDTO, Customer> {
     CustomerDTO toDto(Customer s);
+    
+    CustomerResponseDTO toResponseDto(Customer customer);
 
     Customer toEntity(CustomerDTO customerDTO);
 }

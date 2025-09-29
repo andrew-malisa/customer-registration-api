@@ -4,13 +4,14 @@ import com.vodacom.customerregistration.api.domain.enumeration.AgentStatus;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * A clean DTO for Agent responses when used with UserDTO (without redundant userId)
  */
 public class AgentResponseDTO implements Serializable {
 
-    private Long id;
+    private UUID id;
 
     @NotNull
     private AgentStatus status;
@@ -24,11 +25,11 @@ public class AgentResponseDTO implements Serializable {
     @Size(max = 100)
     private String ward;
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

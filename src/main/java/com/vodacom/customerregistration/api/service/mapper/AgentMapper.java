@@ -39,6 +39,7 @@ public interface AgentMapper extends EntityMapper<AgentDTO, Agent> {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
+    @Mapping(target = "status", constant = "ACTIVE")
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "lastModifiedBy", ignore = true)

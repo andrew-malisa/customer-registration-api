@@ -7,6 +7,7 @@ import org.hibernate.annotations.GenericGenerator;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.UUID;
 
 /**
  * A Customer.
@@ -15,15 +16,15 @@ import java.time.LocalDate;
 @Table(name = "customer")
 @org.springframework.data.elasticsearch.annotations.Document(indexName = "customer")
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class Customer extends AbstractAuditingEntity<Long> implements Serializable {
+public class Customer extends AbstractAuditingEntity<UUID> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GenericGenerator(name = "snowflake", strategy = "com.vodacom.customerregistration.api.util.SnowflakeJpaIdGenerator")
-    @GeneratedValue(generator = "snowflake")
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "id")
-    private Long id;
+    private UUID id;
 
     @NotNull
     @Size(max = 50)
@@ -69,16 +70,16 @@ public class Customer extends AbstractAuditingEntity<Long> implements Serializab
     private String ward;
 
 
-    public Long getId() {
+    public UUID getId() {
         return this.id;
     }
 
-    public Customer id(Long id) {
+    public Customer id(UUID id) {
         this.setId(id);
         return this;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

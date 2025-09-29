@@ -40,13 +40,13 @@ public class AgentCriteria implements Serializable, Criteria {
 
     private static final long serialVersionUID = 1L;
 
-    private LongFilter id;
+    private UUIDFilter id;
 
     private StringFilter phoneNumber;
 
     private AgentStatusFilter status;
 
-    private LongFilter userId;
+    private UUIDFilter userId;
 
     private LongFilter customerId;
 
@@ -61,10 +61,10 @@ public class AgentCriteria implements Serializable, Criteria {
     public AgentCriteria() {}
 
     public AgentCriteria(AgentCriteria other) {
-        this.id = other.optionalId().map(LongFilter::copy).orElse(null);
+        this.id = other.optionalId().map(UUIDFilter::copy).orElse(null);
         this.phoneNumber = other.optionalPhoneNumber().map(StringFilter::copy).orElse(null);
         this.status = other.optionalStatus().map(AgentStatusFilter::copy).orElse(null);
-        this.userId = other.optionalUserId().map(LongFilter::copy).orElse(null);
+        this.userId = other.optionalUserId().map(UUIDFilter::copy).orElse(null);
         this.customerId = other.optionalCustomerId().map(LongFilter::copy).orElse(null);
         this.region = other.optionalRegion().map(StringFilter::copy).orElse(null);
         this.district = other.optionalDistrict().map(StringFilter::copy).orElse(null);
@@ -77,22 +77,22 @@ public class AgentCriteria implements Serializable, Criteria {
         return new AgentCriteria(this);
     }
 
-    public LongFilter getId() {
+    public UUIDFilter getId() {
         return id;
     }
 
-    public Optional<LongFilter> optionalId() {
+    public Optional<UUIDFilter> optionalId() {
         return Optional.ofNullable(id);
     }
 
-    public LongFilter id() {
+    public UUIDFilter id() {
         if (id == null) {
-            setId(new LongFilter());
+            setId(new UUIDFilter());
         }
         return id;
     }
 
-    public void setId(LongFilter id) {
+    public void setId(UUIDFilter id) {
         this.id = id;
     }
 
@@ -134,22 +134,22 @@ public class AgentCriteria implements Serializable, Criteria {
         this.status = status;
     }
 
-    public LongFilter getUserId() {
+    public UUIDFilter getUserId() {
         return userId;
     }
 
-    public Optional<LongFilter> optionalUserId() {
+    public Optional<UUIDFilter> optionalUserId() {
         return Optional.ofNullable(userId);
     }
 
-    public LongFilter userId() {
+    public UUIDFilter userId() {
         if (userId == null) {
-            setUserId(new LongFilter());
+            setUserId(new UUIDFilter());
         }
         return userId;
     }
 
-    public void setUserId(LongFilter userId) {
+    public void setUserId(UUIDFilter userId) {
         this.userId = userId;
     }
 

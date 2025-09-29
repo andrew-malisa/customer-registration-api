@@ -5,6 +5,7 @@ import com.vodacom.customerregistration.api.domain.Customer;
 import com.vodacom.customerregistration.api.repository.CustomerRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ interface CustomerSearchRepositoryInternal {
 
     void index(Customer entity);
 
-    void deleteFromIndexById(Long id);
+    void deleteFromIndexById(UUID id);
 }
 
 class CustomerSearchRepositoryInternalImpl implements CustomerSearchRepositoryInternal {
@@ -126,7 +127,7 @@ class CustomerSearchRepositoryInternalImpl implements CustomerSearchRepositoryIn
     }
 
     @Override
-    public void deleteFromIndexById(Long id) {
+    public void deleteFromIndexById(UUID id) {
         try {
             elasticsearchTemplate.delete(String.valueOf(id), Customer.class);
             elasticsearchTemplate.indexOps(Customer.class).refresh();

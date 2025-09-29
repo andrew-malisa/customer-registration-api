@@ -5,6 +5,7 @@ import com.vodacom.customerregistration.api.domain.Agent;
 import com.vodacom.customerregistration.api.repository.AgentRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ interface AgentSearchRepositoryInternal {
 
     void index(Agent entity);
 
-    void deleteFromIndexById(Long id);
+    void deleteFromIndexById(UUID id);
 }
 
 class AgentSearchRepositoryInternalImpl implements AgentSearchRepositoryInternal {
@@ -200,7 +201,7 @@ class AgentSearchRepositoryInternalImpl implements AgentSearchRepositoryInternal
     }
 
     @Override
-    public void deleteFromIndexById(Long id) {
+    public void deleteFromIndexById(UUID id) {
         LOG.info("=== ELASTICSEARCH AGENT DELETE START ===");
         LOG.info("Attempting to delete agent from index - ID: {}", id);
 

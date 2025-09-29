@@ -155,8 +155,18 @@ public class UserService {
             Set<Authority> authorities = userDTO.getAuthorities().stream().map(authorityRepository::findById).filter(Optional::isPresent).map(Optional::get).collect(Collectors.toSet());
             user.setAuthorities(authorities);
         }
-        userRepository.save(user);
-        userSearchRepository.index(user);
+        try {
+            userRepository.save(user);
+            userSearchRepository.index(user);
+        } catch (Exception e) {
+            if (e.getMessage().contains("email")) {
+                throw new com.vodacom.customerregistration.api.web.rest.errors.EmailAlreadyUsedException();
+            }
+            if (e.getMessage().contains("login")) {
+                throw new com.vodacom.customerregistration.api.web.rest.errors.LoginAlreadyUsedException();
+            }
+            throw e;
+        }
         LOG.debug("Created Information for User: {}", user);
         return user;
     }

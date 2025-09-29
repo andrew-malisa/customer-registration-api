@@ -1,6 +1,69 @@
-# Customer Registration System
+# Customer Registration System - Mobile Agent API
 
-A robust Spring Boot microservice for managing customer registrations and agent operations in telecommunications environments.
+A robust Spring Boot microservice for managing customer registrations and agent operations in telecommunications environments, designed for mobile agent applications.
+
+## 📋 Assessment Summary
+
+This project addresses a scenario-based assessment for a mobile agent application with the following requirements:
+
+### ✅ Core Features Implemented
+
+**(a) Agent Authentication** 
+- **Endpoint**: `POST /api/authenticate`
+- **Implementation**: Username/password authentication with JWT tokens
+- **Current Status**: ✅ Fully implemented (uses phone number)
+
+**(b) Agent Profile Information**
+- **Endpoint**: `GET /api/v1/agents/{id}/details` 
+- **Returns**: Complete agent profile with location (region, district, ward), status, and user details
+- **Current Status**: ✅ Fully implemented
+
+**(c) Customer Registration**
+- **Endpoint**: `POST /api/v1/customers`
+- **Features**: Full customer details with NIDA validation, location tracking, audit logging
+- **Current Status**: ✅ Fully implemented with comprehensive validation
+
+**(d) Agent Activity History**
+- **Endpoint**: `GET /api/v1/activity-logs/me`
+- **Features**: Paginated, searchable activity history with filtering by action type
+- **Current Status**: ✅ Fully implemented with advanced search capabilities
+
+**(e) Agent Logout**
+- **Endpoint**: `POST /api/logout`
+- **Features**: Secure token invalidation with activity logging
+- **Current Status**: ✅ Fully implemented
+
+### 🏗️ Architecture & Design Choices
+- **Language**: Java 17
+- **Framework**: Spring Boot 3.x with Spring Security
+- **Database**: PostgreSQL for reliability and ACID compliance
+- **Search**: Elasticsearch for fast, scalable search operations
+- **Authentication**: JWT tokens with role-based security
+- **API Design**: RESTful with comprehensive OpenAPI documentation
+
+### 🔒 Security Implementation
+- BCrypt password encryption (60-character hashes)
+- JWT token-based authentication with configurable expiration
+- Method-level security annotations (`@PreAuthorize`)
+- Input validation and sanitization
+- Comprehensive audit logging for all operations
+- Role-based access control (ROLE_ADMIN, ROLE_AGENT)
+
+### 🚀 Performance & Scalability Features
+- Elasticsearch integration for lightning-fast search
+- Database indexing strategy with proper foreign keys
+- Connection pooling with HikariCP
+- Async processing for non-critical operations
+- Stateless design for horizontal scaling
+- Automatic database seeding with Elasticsearch reindexing
+
+### 🔄 CI/CD Pipeline Features
+- **Build**: Maven-based with dependency management
+- **Testing**: Comprehensive unit and integration tests with TestContainers
+- **Quality Gates**: Checkstyle enforcement and static analysis
+- **Containerization**: Docker support with multi-stage builds
+- **Cloud Deployment**: AWS ECR and EC2 integration
+- **Infrastructure**: Automated service provisioning
 
 ## Overview
 

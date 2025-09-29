@@ -5,10 +5,11 @@ import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 public class ActivityLogDTO implements Serializable {
 
-    private Long id;
+    private UUID id;
 
     @NotNull
     private ActivityLog.ActionType actionType;
@@ -17,7 +18,7 @@ public class ActivityLogDTO implements Serializable {
     @Size(max = 100)
     private String entityType;
 
-    private Long entityId;
+    private UUID entityId;
 
     @Size(max = 1000)
     private String description;
@@ -47,11 +48,11 @@ public class ActivityLogDTO implements Serializable {
 
     private Instant lastModifiedDate;
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -71,11 +72,11 @@ public class ActivityLogDTO implements Serializable {
         this.entityType = entityType;
     }
 
-    public Long getEntityId() {
+    public UUID getEntityId() {
         return entityId;
     }
 
-    public void setEntityId(Long entityId) {
+    public void setEntityId(UUID entityId) {
         this.entityId = entityId;
     }
 

@@ -39,6 +39,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * REST controller for managing {@link com.vodacom.customerregistration.api.domain.Agent}.
@@ -223,7 +224,7 @@ public class AgentResource {
         }
         """))), @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad request - Invalid ID or data validation errors", content = @Content(mediaType = "application/json")), @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Agent not found with provided ID", content = @Content(mediaType = "application/json"))})
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<AgentDetailResponseDTO>> updateAgent(@Parameter(description = "Agent ID to update", required = true, example = "1") @PathVariable(value = "id", required = false) final Long id, @Parameter(description = "Complete agent data for update. Must include ID field matching path parameter.", required = true) @Valid @RequestBody AgentDTO agentDTO) throws URISyntaxException {
+    public ResponseEntity<ApiResponse<AgentDetailResponseDTO>> updateAgent(@Parameter(description = "Agent ID to update", required = true, example = "1") @PathVariable(value = "id", required = false) final UUID id, @Parameter(description = "Complete agent data for update. Must include ID field matching path parameter.", required = true) @Valid @RequestBody AgentDTO agentDTO) throws URISyntaxException {
         LOG.debug("REST request to update Agent : {}, {}", id, agentDTO);
         if (agentDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
@@ -276,7 +277,7 @@ public class AgentResource {
         }
         """))), @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad request - Invalid ID or data validation errors", content = @Content(mediaType = "application/json")), @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Agent not found with provided ID", content = @Content(mediaType = "application/json"))})
     @PatchMapping(value = "/{id}", consumes = {"application/json", "application/merge-patch+json"})
-    public ResponseEntity<ApiResponse<AgentDetailResponseDTO>> partialUpdateAgent(@Parameter(description = "Agent ID to partially update", required = true, example = "1") @PathVariable(value = "id", required = false) final Long id, @Parameter(description = "Partial agent data. Only provided fields will be updated. Null fields are ignored.", required = true, example = """
+    public ResponseEntity<ApiResponse<AgentDetailResponseDTO>> partialUpdateAgent(@Parameter(description = "Agent ID to partially update", required = true, example = "1") @PathVariable(value = "id", required = false) final UUID id, @Parameter(description = "Partial agent data. Only provided fields will be updated. Null fields are ignored.", required = true, example = """
         {
             "email": "new.email@example.com",
             "phoneNumber": "+255999888777"
@@ -409,7 +410,7 @@ public class AgentResource {
         }
         """)))})
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<AgentDetailResponseDTO>> getAgent(@Parameter(description = "Agent ID to retrieve", required = true, example = "1") @PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<AgentDetailResponseDTO>> getAgent(@Parameter(description = "Agent ID to retrieve", required = true, example = "1") @PathVariable("id") UUID id) {
         LOG.debug("REST request to get Agent : {}", id);
         Optional<AgentDetailResponseDTO> agentDTO = agentService.findOne(id);
 
@@ -466,7 +467,7 @@ public class AgentResource {
         }
         """)))})
     @GetMapping("/{id}/details")
-    public ResponseEntity<ApiResponse<AgentDetailResponseDTO>> getAgentWithDetails(@Parameter(description = "Agent ID to retrieve with complete user details", required = true, example = "1") @PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<AgentDetailResponseDTO>> getAgentWithDetails(@Parameter(description = "Agent ID to retrieve with complete user details", required = true, example = "1") @PathVariable("id") UUID id) {
         LOG.debug("REST request to get Agent with details : {}", id);
         Optional<AgentDetailResponseDTO> agentDetail = agentService.findOne(id);
 
@@ -493,7 +494,7 @@ public class AgentResource {
         }
         """))), @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Agent not found with provided ID", content = @Content(mediaType = "application/json"))})
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> deleteAgent(@Parameter(description = "Agent ID to delete (permanent action - cannot be undone)", required = true, example = "1") @PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<Object>> deleteAgent(@Parameter(description = "Agent ID to delete (permanent action - cannot be undone)", required = true, example = "1") @PathVariable("id") UUID id) {
         LOG.debug("REST request to delete Agent : {}", id);
 
         // Get agent details before deletion for logging

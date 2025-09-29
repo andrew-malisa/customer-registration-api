@@ -3,6 +3,8 @@ package com.vodacom.customerregistration.api.repository;
 import com.vodacom.customerregistration.api.domain.Agent;
 import com.vodacom.customerregistration.api.domain.User;
 import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 
@@ -11,8 +13,8 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface AgentRepository extends JpaRepository<Agent, Long>, JpaSpecificationExecutor<Agent> {
-    
+public interface AgentRepository extends JpaRepository<Agent, UUID>, JpaSpecificationExecutor<Agent> {
+
     /**
      * Find an agent by user.
      *

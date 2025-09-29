@@ -71,6 +71,8 @@ public class SecurityConfiguration {
                     .requestMatchers(mvc.pattern(HttpMethod.DELETE, "/api/v1/activity-logs/**")).hasAuthority(ADMIN)
 
                     .requestMatchers(mvc.pattern("/api/account")).authenticated()
+                    .requestMatchers(mvc.pattern("/api/v1/account/reset-password/finish/**")).permitAll()
+                    .requestMatchers(mvc.pattern("/api/account/**")).authenticated()
                     .requestMatchers(mvc.pattern("/api/account/**")).authenticated()
                     .requestMatchers(mvc.pattern("/v3/api-docs/**")).permitAll()
                     .requestMatchers(mvc.pattern("/swagger-ui/**")).permitAll()

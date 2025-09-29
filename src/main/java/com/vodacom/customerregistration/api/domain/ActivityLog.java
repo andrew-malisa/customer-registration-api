@@ -5,19 +5,20 @@ import jakarta.validation.constraints.*;
 import org.hibernate.annotations.GenericGenerator;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "activity_log")
 @org.springframework.data.elasticsearch.annotations.Document(indexName = "activity_log")
-public class ActivityLog extends AbstractAuditingEntity<Long> implements Serializable {
+public class ActivityLog extends AbstractAuditingEntity<UUID> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GenericGenerator(name = "snowflake", strategy = "com.vodacom.customerregistration.api.util.SnowflakeJpaIdGenerator")
-    @GeneratedValue(generator = "snowflake")
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "id")
-    private Long id;
+    private UUID id;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -29,7 +30,7 @@ public class ActivityLog extends AbstractAuditingEntity<Long> implements Seriali
     private String entityType;
 
     @Column(name = "entity_id")
-    private Long entityId;
+    private UUID entityId;
 
     @Size(max = 1000)
     @Column(name = "description", length = 1000)
@@ -90,15 +91,15 @@ public class ActivityLog extends AbstractAuditingEntity<Long> implements Seriali
         PENDING
     }
 
-    public Long getId() {
+    public UUID getId() {
         return this.id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
-    public ActivityLog id(Long id) {
+    public ActivityLog id(UUID id) {
         this.setId(id);
         return this;
     }
@@ -129,15 +130,15 @@ public class ActivityLog extends AbstractAuditingEntity<Long> implements Seriali
         return this;
     }
 
-    public Long getEntityId() {
+    public UUID getEntityId() {
         return this.entityId;
     }
 
-    public void setEntityId(Long entityId) {
+    public void setEntityId(UUID entityId) {
         this.entityId = entityId;
     }
 
-    public ActivityLog entityId(Long entityId) {
+    public ActivityLog entityId(UUID entityId) {
         this.setEntityId(entityId);
         return this;
     }

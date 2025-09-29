@@ -4,6 +4,7 @@ import com.vodacom.customerregistration.api.domain.enumeration.AgentStatus;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * A DTO for the {@link com.vodacom.customerregistration.api.domain.Agent} entity.
@@ -11,7 +12,7 @@ import java.util.Objects;
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class AgentDTO implements Serializable {
 
-    private Long id;
+    private UUID id;
 
     @NotNull
     @Pattern(regexp = "^(\\+255|0)[67]\\d{8}$")
@@ -21,7 +22,7 @@ public class AgentDTO implements Serializable {
     private AgentStatus status;
 
     @NotNull
-    private Long userId;
+    private UUID userId;
 
     @Size(max = 100)
     private String region;
@@ -32,11 +33,11 @@ public class AgentDTO implements Serializable {
     @Size(max = 100)
     private String ward;
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -56,11 +57,11 @@ public class AgentDTO implements Serializable {
         this.status = status;
     }
 
-    public Long getUserId() {
+    public UUID getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(UUID userId) {
         this.userId = userId;
     }
 

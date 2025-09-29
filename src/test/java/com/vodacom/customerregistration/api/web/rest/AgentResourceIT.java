@@ -21,6 +21,7 @@ import com.vodacom.customerregistration.api.service.mapper.AgentMapper;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.util.IterableUtil;
@@ -55,6 +56,10 @@ class AgentResourceIT {
 
     private static Random random = new Random();
     private static AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
+    
+    private static final UUID ANOTHER_UUID = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private static final UUID THIRD_UUID = UUID.fromString("33333333-3333-3333-3333-333333333333");
+    private static final UUID MAX_UUID = UUID.fromString("ffffffff-ffff-ffff-ffff-ffffffffffff");
 
     @Autowired
     private ObjectMapper om;
@@ -164,7 +169,7 @@ class AgentResourceIT {
     @Transactional
     void createAgentWithExistingId() throws Exception {
         // Create the Agent with an existing ID
-        agent.setId(1L);
+        agent.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         AgentDTO agentDTO = agentMapper.toDto(agent);
 
         long databaseSizeBeforeCreate = getRepositoryCount();
@@ -234,7 +239,7 @@ class AgentResourceIT {
             .perform(get(ENTITY_API_URL + "?sort=id,desc"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(agent.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(agent.getId().toString())))
             .andExpect(jsonPath("$.[*].phoneNumber").value(hasItem(DEFAULT_PHONE_NUMBER)))
             .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())));
     }
@@ -250,7 +255,7 @@ class AgentResourceIT {
             .perform(get(ENTITY_API_URL_ID, agent.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.id").value(agent.getId().intValue()))
+            .andExpect(jsonPath("$.id").value(agent.getId().toString()))
             .andExpect(jsonPath("$.phoneNumber").value(DEFAULT_PHONE_NUMBER))
             .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()));
     }
@@ -261,7 +266,7 @@ class AgentResourceIT {
         // Initialize the database
         insertedAgent = agentRepository.saveAndFlush(agent);
 
-        Long id = agent.getId();
+        UUID id = agent.getId();
 
         defaultAgentFiltering("id.equals=" + id, "id.notEquals=" + id);
 
@@ -359,12 +364,12 @@ class AgentResourceIT {
         // Get already existing entity
         User user = agent.getUser();
         agentRepository.saveAndFlush(agent);
-        Long userId = user.getId();
+        UUID userId = user.getId();
         // Get all the agentList where user equals to userId
         defaultAgentShouldBeFound("userId.equals=" + userId);
 
-        // Get all the agentList where user equals to (userId + 1)
-        defaultAgentShouldNotBeFound("userId.equals=" + (userId + 1));
+        // Get all the agentList where user equals to ANOTHER_UUID
+        defaultAgentShouldNotBeFound("userId.equals=" + ANOTHER_UUID);
     }
 
     private void defaultAgentFiltering(String shouldBeFound, String shouldNotBeFound) throws Exception {
@@ -380,7 +385,7 @@ class AgentResourceIT {
             .perform(get(ENTITY_API_URL + "?sort=id,desc&" + filter))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(agent.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(agent.getId().toString())))
             .andExpect(jsonPath("$.[*].phoneNumber").value(hasItem(DEFAULT_PHONE_NUMBER)))
             .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())));
 
@@ -415,7 +420,7 @@ class AgentResourceIT {
     @Transactional
     void getNonExistingAgent() throws Exception {
         // Get the agent
-        restAgentMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
+        restAgentMockMvc.perform(get(ENTITY_API_URL_ID, MAX_UUID)).andExpect(status().isNotFound());
     }
 
     @Test
@@ -462,7 +467,7 @@ class AgentResourceIT {
     void putNonExistingAgent() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(agentSearchRepository.findAll());
-        agent.setId(longCount.incrementAndGet());
+        agent.setId(UUID.randomUUID());
 
         // Create the Agent
         AgentDTO agentDTO = agentMapper.toDto(agent);
@@ -485,7 +490,7 @@ class AgentResourceIT {
     void putWithIdMismatchAgent() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(agentSearchRepository.findAll());
-        agent.setId(longCount.incrementAndGet());
+        agent.setId(UUID.randomUUID());
 
         // Create the Agent
         AgentDTO agentDTO = agentMapper.toDto(agent);
@@ -493,7 +498,7 @@ class AgentResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restAgentMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, longCount.incrementAndGet())
+                put(ENTITY_API_URL_ID, UUID.randomUUID())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(om.writeValueAsBytes(agentDTO))
             )
@@ -510,7 +515,7 @@ class AgentResourceIT {
     void putWithMissingIdPathParamAgent() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(agentSearchRepository.findAll());
-        agent.setId(longCount.incrementAndGet());
+        agent.setId(UUID.randomUUID());
 
         // Create the Agent
         AgentDTO agentDTO = agentMapper.toDto(agent);
@@ -587,7 +592,7 @@ class AgentResourceIT {
     void patchNonExistingAgent() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(agentSearchRepository.findAll());
-        agent.setId(longCount.incrementAndGet());
+        agent.setId(UUID.randomUUID());
 
         // Create the Agent
         AgentDTO agentDTO = agentMapper.toDto(agent);
@@ -612,7 +617,7 @@ class AgentResourceIT {
     void patchWithIdMismatchAgent() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(agentSearchRepository.findAll());
-        agent.setId(longCount.incrementAndGet());
+        agent.setId(UUID.randomUUID());
 
         // Create the Agent
         AgentDTO agentDTO = agentMapper.toDto(agent);
@@ -620,7 +625,7 @@ class AgentResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restAgentMockMvc
             .perform(
-                patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
+                patch(ENTITY_API_URL_ID, UUID.randomUUID())
                     .contentType("application/merge-patch+json")
                     .content(om.writeValueAsBytes(agentDTO))
             )
@@ -637,7 +642,7 @@ class AgentResourceIT {
     void patchWithMissingIdPathParamAgent() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(agentSearchRepository.findAll());
-        agent.setId(longCount.incrementAndGet());
+        agent.setId(UUID.randomUUID());
 
         // Create the Agent
         AgentDTO agentDTO = agentMapper.toDto(agent);
@@ -688,7 +693,7 @@ class AgentResourceIT {
             .perform(get(ENTITY_SEARCH_API_URL + "?query=id:" + agent.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(agent.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(agent.getId().toString())))
             .andExpect(jsonPath("$.[*].phoneNumber").value(hasItem(DEFAULT_PHONE_NUMBER)))
             .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())));
     }

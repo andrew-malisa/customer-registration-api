@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.GenericGenerator;
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * A Agent.
@@ -13,15 +14,15 @@ import java.io.Serializable;
 @Table(name = "agent")
 @org.springframework.data.elasticsearch.annotations.Document(indexName = "agent")
 @SuppressWarnings("common-java:DuplicatedBlocks")
-public class Agent extends AbstractAuditingEntity<Long> implements Serializable {
+public class Agent extends AbstractAuditingEntity<UUID> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GenericGenerator(name = "snowflake", strategy = "com.vodacom.customerregistration.api.util.SnowflakeJpaIdGenerator")
-    @GeneratedValue(generator = "snowflake")
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(name = "id")
-    private Long id;
+    private UUID id;
 
     @NotNull
     @Pattern(regexp = "^(\\+255|0)[67]\\d{8}$")
@@ -57,16 +58,16 @@ public class Agent extends AbstractAuditingEntity<Long> implements Serializable 
     private String ward;
 
 
-    public Long getId() {
+    public UUID getId() {
         return this.id;
     }
 
-    public Agent id(Long id) {
+    public Agent id(UUID id) {
         this.setId(id);
         return this;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

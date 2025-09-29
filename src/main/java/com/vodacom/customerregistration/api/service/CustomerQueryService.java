@@ -6,6 +6,7 @@ import com.vodacom.customerregistration.api.repository.CustomerRepository;
 import com.vodacom.customerregistration.api.repository.search.CustomerSearchRepository;
 import com.vodacom.customerregistration.api.service.criteria.CustomerCriteria;
 import com.vodacom.customerregistration.api.service.dto.CustomerDTO;
+import com.vodacom.customerregistration.api.service.dto.CustomerResponseDTO;
 import com.vodacom.customerregistration.api.service.mapper.CustomerMapper;
 import jakarta.persistence.criteria.JoinType;
 import org.slf4j.Logger;
@@ -59,6 +60,19 @@ public class CustomerQueryService extends QueryService<Customer> {
     }
 
     /**
+     * Return a {@link Page} of {@link CustomerResponseDTO} with audit fields which matches the criteria from the database.
+     * @param criteria The object which holds all the filters, which the entities should match.
+     * @param page The page, which should be returned.
+     * @return the matching entities with audit fields.
+     */
+    @Transactional(readOnly = true)
+    public Page<CustomerResponseDTO> findByCriteriaWithAuditFields(CustomerCriteria criteria, Pageable page) {
+        LOG.debug("find by criteria with audit fields : {}, page: {}", criteria, page);
+        final Specification<Customer> specification = createSpecification(criteria);
+        return customerRepository.findAll(specification, page).map(customerMapper::toResponseDto);
+    }
+
+    /**
      * Return the number of matching entities in the database.
      * @param criteria The object which holds all the filters, which the entities should match.
      * @return the number of matching entities.
@@ -81,7 +95,7 @@ public class CustomerQueryService extends QueryService<Customer> {
             // This has to be called first, because the distinct method returns null
             specification = Specification.allOf(
                 Boolean.TRUE.equals(criteria.getDistinct()) ? distinct(criteria.getDistinct()) : null,
-                buildRangeSpecification(criteria.getId(), Customer_.id),
+                buildSpecification(criteria.getId(), Customer_.id),
                 buildStringSpecification(criteria.getFirstName(), Customer_.firstName),
                 buildStringSpecification(criteria.getMiddleName(), Customer_.middleName),
                 buildStringSpecification(criteria.getLastName(), Customer_.lastName),

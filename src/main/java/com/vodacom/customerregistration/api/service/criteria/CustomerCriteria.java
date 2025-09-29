@@ -22,7 +22,7 @@ public class CustomerCriteria implements Serializable, Criteria {
 
     private static final long serialVersionUID = 1L;
 
-    private LongFilter id;
+    private UUIDFilter id;
 
     private StringFilter firstName;
 
@@ -44,12 +44,20 @@ public class CustomerCriteria implements Serializable, Criteria {
 
     private LongFilter registeredById;
 
+    private StringFilter createdBy;
+
+    private InstantFilter createdDate;
+
+    private StringFilter lastModifiedBy;
+
+    private InstantFilter lastModifiedDate;
+
     private Boolean distinct;
 
     public CustomerCriteria() {}
 
     public CustomerCriteria(CustomerCriteria other) {
-        this.id = other.optionalId().map(LongFilter::copy).orElse(null);
+        this.id = other.optionalId().map(UUIDFilter::copy).orElse(null);
         this.firstName = other.optionalFirstName().map(StringFilter::copy).orElse(null);
         this.middleName = other.optionalMiddleName().map(StringFilter::copy).orElse(null);
         this.lastName = other.optionalLastName().map(StringFilter::copy).orElse(null);
@@ -60,6 +68,10 @@ public class CustomerCriteria implements Serializable, Criteria {
         this.district = other.optionalDistrict().map(StringFilter::copy).orElse(null);
         this.ward = other.optionalWard().map(StringFilter::copy).orElse(null);
         this.registeredById = other.optionalRegisteredById().map(LongFilter::copy).orElse(null);
+        this.createdBy = other.optionalCreatedBy().map(StringFilter::copy).orElse(null);
+        this.createdDate = other.optionalCreatedDate().map(InstantFilter::copy).orElse(null);
+        this.lastModifiedBy = other.optionalLastModifiedBy().map(StringFilter::copy).orElse(null);
+        this.lastModifiedDate = other.optionalLastModifiedDate().map(InstantFilter::copy).orElse(null);
         this.distinct = other.distinct;
     }
 
@@ -68,22 +80,22 @@ public class CustomerCriteria implements Serializable, Criteria {
         return new CustomerCriteria(this);
     }
 
-    public LongFilter getId() {
+    public UUIDFilter getId() {
         return id;
     }
 
-    public Optional<LongFilter> optionalId() {
+    public Optional<UUIDFilter> optionalId() {
         return Optional.ofNullable(id);
     }
 
-    public LongFilter id() {
+    public UUIDFilter id() {
         if (id == null) {
-            setId(new LongFilter());
+            setId(new UUIDFilter());
         }
         return id;
     }
 
-    public void setId(LongFilter id) {
+    public void setId(UUIDFilter id) {
         this.id = id;
     }
 
@@ -277,6 +289,82 @@ public class CustomerCriteria implements Serializable, Criteria {
         this.registeredById = registeredById;
     }
 
+    public StringFilter getCreatedBy() {
+        return createdBy;
+    }
+
+    public Optional<StringFilter> optionalCreatedBy() {
+        return Optional.ofNullable(createdBy);
+    }
+
+    public StringFilter createdBy() {
+        if (createdBy == null) {
+            setCreatedBy(new StringFilter());
+        }
+        return createdBy;
+    }
+
+    public void setCreatedBy(StringFilter createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public InstantFilter getCreatedDate() {
+        return createdDate;
+    }
+
+    public Optional<InstantFilter> optionalCreatedDate() {
+        return Optional.ofNullable(createdDate);
+    }
+
+    public InstantFilter createdDate() {
+        if (createdDate == null) {
+            setCreatedDate(new InstantFilter());
+        }
+        return createdDate;
+    }
+
+    public void setCreatedDate(InstantFilter createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public StringFilter getLastModifiedBy() {
+        return lastModifiedBy;
+    }
+
+    public Optional<StringFilter> optionalLastModifiedBy() {
+        return Optional.ofNullable(lastModifiedBy);
+    }
+
+    public StringFilter lastModifiedBy() {
+        if (lastModifiedBy == null) {
+            setLastModifiedBy(new StringFilter());
+        }
+        return lastModifiedBy;
+    }
+
+    public void setLastModifiedBy(StringFilter lastModifiedBy) {
+        this.lastModifiedBy = lastModifiedBy;
+    }
+
+    public InstantFilter getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+
+    public Optional<InstantFilter> optionalLastModifiedDate() {
+        return Optional.ofNullable(lastModifiedDate);
+    }
+
+    public InstantFilter lastModifiedDate() {
+        if (lastModifiedDate == null) {
+            setLastModifiedDate(new InstantFilter());
+        }
+        return lastModifiedDate;
+    }
+
+    public void setLastModifiedDate(InstantFilter lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
+    }
+
     public Boolean getDistinct() {
         return distinct;
     }
@@ -317,6 +405,10 @@ public class CustomerCriteria implements Serializable, Criteria {
             Objects.equals(district, that.district) &&
             Objects.equals(ward, that.ward) &&
             Objects.equals(registeredById, that.registeredById) &&
+            Objects.equals(createdBy, that.createdBy) &&
+            Objects.equals(createdDate, that.createdDate) &&
+            Objects.equals(lastModifiedBy, that.lastModifiedBy) &&
+            Objects.equals(lastModifiedDate, that.lastModifiedDate) &&
             Objects.equals(distinct, that.distinct)
         );
     }
@@ -335,6 +427,10 @@ public class CustomerCriteria implements Serializable, Criteria {
             district,
             ward,
             registeredById,
+            createdBy,
+            createdDate,
+            lastModifiedBy,
+            lastModifiedDate,
             distinct
         );
     }
@@ -354,6 +450,10 @@ public class CustomerCriteria implements Serializable, Criteria {
             optionalDistrict().map(f -> "district=" + f + ", ").orElse("") +
             optionalWard().map(f -> "ward=" + f + ", ").orElse("") +
             optionalRegisteredById().map(f -> "registeredById=" + f + ", ").orElse("") +
+            optionalCreatedBy().map(f -> "createdBy=" + f + ", ").orElse("") +
+            optionalCreatedDate().map(f -> "createdDate=" + f + ", ").orElse("") +
+            optionalLastModifiedBy().map(f -> "lastModifiedBy=" + f + ", ").orElse("") +
+            optionalLastModifiedDate().map(f -> "lastModifiedDate=" + f + ", ").orElse("") +
             optionalDistinct().map(f -> "distinct=" + f + ", ").orElse("") +
         "}";
     }

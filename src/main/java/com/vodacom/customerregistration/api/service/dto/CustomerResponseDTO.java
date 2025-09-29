@@ -1,6 +1,5 @@
 package com.vodacom.customerregistration.api.service.dto;
 
-import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -8,39 +7,26 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * A DTO for the {@link com.vodacom.customerregistration.api.domain.Customer} entity.
+ * A Response DTO for the {@link com.vodacom.customerregistration.api.domain.Customer} entity.
+ * This DTO includes audit fields for read operations.
  */
-@SuppressWarnings("common-java:DuplicatedBlocks")
-public class CustomerDTO implements Serializable {
+public class CustomerResponseDTO implements Serializable {
 
     private UUID id;
-
-    @NotNull
-    @Size(max = 50)
     private String firstName;
-
-    @Size(max = 50)
     private String middleName;
-
-    @NotNull
-    @Size(max = 50)
     private String lastName;
-
-    @NotNull
     private LocalDate dateOfBirth;
-
-    @NotNull
-    @Pattern(regexp = "^\\d{20}$")
     private String nidaNumber;
-
-    @Size(max = 100)
     private String region;
-
-    @Size(max = 100)
     private String district;
-
-    @Size(max = 100)
     private String ward;
+
+    // Audit fields
+    private String createdBy;
+    private Instant createdDate;
+    private String lastModifiedBy;
+    private Instant lastModifiedDate;
 
     public UUID getId() {
         return id;
@@ -114,21 +100,52 @@ public class CustomerDTO implements Serializable {
         this.ward = ward;
     }
 
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Instant getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Instant createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public String getLastModifiedBy() {
+        return lastModifiedBy;
+    }
+
+    public void setLastModifiedBy(String lastModifiedBy) {
+        this.lastModifiedBy = lastModifiedBy;
+    }
+
+    public Instant getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+
+    public void setLastModifiedDate(Instant lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
+    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof CustomerDTO)) {
+        if (!(o instanceof CustomerResponseDTO)) {
             return false;
         }
 
-        CustomerDTO customerDTO = (CustomerDTO) o;
+        CustomerResponseDTO that = (CustomerResponseDTO) o;
         if (this.id == null) {
             return false;
         }
-        return Objects.equals(this.id, customerDTO.id);
+        return Objects.equals(this.id, that.id);
     }
 
     @Override
@@ -136,10 +153,9 @@ public class CustomerDTO implements Serializable {
         return Objects.hash(this.id);
     }
 
-    // prettier-ignore
     @Override
     public String toString() {
-        return "CustomerDTO{" +
+        return "CustomerResponseDTO{" +
             "id=" + getId() +
             ", firstName='" + getFirstName() + "'" +
             ", middleName='" + getMiddleName() + "'" +
@@ -149,6 +165,10 @@ public class CustomerDTO implements Serializable {
             ", region='" + getRegion() + "'" +
             ", district='" + getDistrict() + "'" +
             ", ward='" + getWard() + "'" +
+            ", createdBy='" + getCreatedBy() + "'" +
+            ", createdDate='" + getCreatedDate() + "'" +
+            ", lastModifiedBy='" + getLastModifiedBy() + "'" +
+            ", lastModifiedDate='" + getLastModifiedDate() + "'" +
             "}";
     }
 }

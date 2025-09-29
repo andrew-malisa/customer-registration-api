@@ -7,6 +7,7 @@ import com.vodacom.customerregistration.api.service.CustomerQueryService;
 import com.vodacom.customerregistration.api.service.CustomerService;
 import com.vodacom.customerregistration.api.service.criteria.CustomerCriteria;
 import com.vodacom.customerregistration.api.service.dto.CustomerDTO;
+import com.vodacom.customerregistration.api.service.dto.CustomerResponseDTO;
 import com.vodacom.customerregistration.api.web.rest.errors.BadRequestAlertException;
 import com.vodacom.customerregistration.api.web.rest.errors.ElasticsearchExceptionMapper;
 import com.vodacom.customerregistration.api.web.rest.util.ApiResponse;
@@ -36,6 +37,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * REST controller for managing {@link com.vodacom.customerregistration.api.domain.Customer}.
@@ -105,7 +107,7 @@ public class CustomerResource {
         }
         """)))})
     @PostMapping("")
-    public ResponseEntity<ApiResponse<CustomerDTO>> createCustomer(@Parameter(description = "Customer information to create. ID should not be provided for new customers.", required = true, example = """
+    public ResponseEntity<ApiResponse<CustomerResponseDTO>> createCustomer(@Parameter(description = "Customer information to create. ID should not be provided for new customers.", required = true, example = """
         {
             "firstName": "John",
             "middleName": "Michael",
@@ -122,11 +124,11 @@ public class CustomerResource {
         if (customerDTO.getId() != null) {
             throw new BadRequestAlertException("A new customer cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        CustomerDTO savedCustomer = customerService.save(customerDTO);
+        CustomerResponseDTO savedCustomer = customerService.saveWithAuditFields(customerDTO);
 
         activityLogService.logActivity(ActivityLog.ActionType.CUSTOMER_REGISTERED, "Customer", savedCustomer.getId(), String.format("Registered new customer: %s %s (NIDA: %s)", savedCustomer.getFirstName(), savedCustomer.getLastName(), savedCustomer.getNidaNumber()));
 
-        ApiResponse<CustomerDTO> response = ApiResponse.created("Customer created successfully", savedCustomer);
+        ApiResponse<CustomerResponseDTO> response = ApiResponse.created("Customer created successfully", savedCustomer);
 
         return ResponseEntity.created(new URI("/api/v1/customers/" + savedCustomer.getId())).headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, savedCustomer.getId().toString())).body(response);
     }
@@ -162,7 +164,7 @@ public class CustomerResource {
         }
         """))), @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad request - Invalid ID or customer data", content = @Content(mediaType = "application/json")), @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Customer not found", content = @Content(mediaType = "application/json"))})
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<CustomerDTO>> updateCustomer(@Parameter(description = "ID of the customer to update", required = true, example = "1") @PathVariable(value = "id", required = false) final Long id, @Parameter(description = "Complete customer object with updated information", required = true) @Valid @RequestBody CustomerDTO customerDTO) throws URISyntaxException {
+    public ResponseEntity<ApiResponse<CustomerResponseDTO>> updateCustomer(@Parameter(description = "ID of the customer to update", required = true, example = "1") @PathVariable(value = "id", required = false) final UUID id, @Parameter(description = "Complete customer object with updated information", required = true) @Valid @RequestBody CustomerDTO customerDTO) throws URISyntaxException {
         LOG.debug("REST request to update Customer : {}, {}", id, customerDTO);
         if (customerDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
@@ -175,7 +177,7 @@ public class CustomerResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        CustomerDTO updatedCustomer = customerService.update(customerDTO);
+        CustomerResponseDTO updatedCustomer = customerService.updateWithAuditFields(customerDTO);
 
         // Log customer update activity
         activityLogService.logActivity(ActivityLog.ActionType.CUSTOMER_UPDATED, "Customer", updatedCustomer.getId(), String.format("Updated customer: %s %s (NIDA: %s)", updatedCustomer.getFirstName(), updatedCustomer.getLastName(), updatedCustomer.getNidaNumber()));
@@ -215,7 +217,7 @@ public class CustomerResource {
         }
         """))), @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad request - Invalid ID or customer data", content = @Content(mediaType = "application/json")), @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Customer not found", content = @Content(mediaType = "application/json"))})
     @PatchMapping(value = "/{id}", consumes = {"application/json", "application/merge-patch+json"})
-    public ResponseEntity<ApiResponse<CustomerDTO>> partialUpdateCustomer(@Parameter(description = "ID of the customer to partially update", required = true, example = "1") @PathVariable(value = "id", required = false) final Long id, @Parameter(description = "Customer object with fields to update (only non-null fields will be updated)", required = true) @NotNull @RequestBody CustomerDTO customerDTO) throws URISyntaxException {
+    public ResponseEntity<ApiResponse<CustomerResponseDTO>> partialUpdateCustomer(@Parameter(description = "ID of the customer to partially update", required = true, example = "1") @PathVariable(value = "id", required = false) final UUID id, @Parameter(description = "Customer object with fields to update (only non-null fields will be updated)", required = true) @NotNull @RequestBody CustomerDTO customerDTO) throws URISyntaxException {
         LOG.debug("REST request to partial update Customer partially : {}, {}", id, customerDTO);
         if (customerDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
@@ -228,10 +230,10 @@ public class CustomerResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Optional<CustomerDTO> result = customerService.partialUpdate(customerDTO);
+        Optional<CustomerResponseDTO> result = customerService.partialUpdateWithAuditFields(customerDTO);
 
         if (result.isPresent()) {
-            CustomerDTO updatedCustomer = result.orElseThrow();
+            CustomerResponseDTO updatedCustomer = result.orElseThrow();
 
             // Log customer partial update activity
             activityLogService.logActivity(ActivityLog.ActionType.CUSTOMER_UPDATED, "Customer", updatedCustomer.getId(), String.format("Partially updated customer: %s %s (NIDA: %s)", updatedCustomer.getFirstName(), updatedCustomer.getLastName(), updatedCustomer.getNidaNumber()));
@@ -285,10 +287,10 @@ public class CustomerResource {
         }
         """)))})
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<CustomerDTO>>> getAllCustomers(@Parameter(description = "Filtering criteria for customers (firstName, lastName, region, district, ward, etc.)") CustomerCriteria criteria, @Parameter(description = "Pagination information (page, size, sort)") @org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+    public ResponseEntity<ApiResponse<List<CustomerResponseDTO>>> getAllCustomers(@Parameter(description = "Filtering criteria for customers (firstName, lastName, region, district, ward, etc.)") CustomerCriteria criteria, @Parameter(description = "Pagination information (page, size, sort)") @org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         LOG.debug("REST request to get Customers by criteria: {}", criteria);
 
-        Page<CustomerDTO> page = customerQueryService.findByCriteria(criteria, pageable);
+        Page<CustomerResponseDTO> page = customerQueryService.findByCriteriaWithAuditFields(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(ApiResponse.success("Customers retrieved successfully", page.getContent()));
     }
@@ -345,15 +347,15 @@ public class CustomerResource {
         }
         """)))})
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<CustomerDTO>> getCustomer(@Parameter(description = "Unique identifier of the customer to retrieve", required = true, example = "1") @PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<CustomerResponseDTO>> getCustomer(@Parameter(description = "Unique identifier of the customer to retrieve", required = true, example = "1") @PathVariable("id") UUID id) {
         LOG.debug("REST request to get Customer : {}", id);
-        Optional<CustomerDTO> customerDTO = customerService.findOne(id);
+        Optional<CustomerResponseDTO> customerDTO = customerService.findOneWithAuditFields(id);
 
         if (customerDTO.isPresent()) {
-            ApiResponse<CustomerDTO> response = ApiResponse.success("Customer retrieved successfully", customerDTO.orElseThrow());
+            ApiResponse<CustomerResponseDTO> response = ApiResponse.success("Customer retrieved successfully", customerDTO.orElseThrow());
             return ResponseEntity.ok(response);
         } else {
-            ApiResponse<CustomerDTO> response = ApiResponse.notFound("Customer not found with id: " + id);
+            ApiResponse<CustomerResponseDTO> response = ApiResponse.notFound("Customer not found with id: " + id);
             return ResponseEntity.status(404).body(response);
         }
     }
@@ -372,7 +374,7 @@ public class CustomerResource {
         }
         """))), @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Customer not found", content = @Content(mediaType = "application/json"))})
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> deleteCustomer(@Parameter(description = "ID of the customer to delete", required = true, example = "1") @PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<Object>> deleteCustomer(@Parameter(description = "ID of the customer to delete", required = true, example = "1") @PathVariable("id") UUID id) {
         LOG.debug("REST request to delete Customer : {}", id);
 
         // Get customer details before deletion for logging

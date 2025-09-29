@@ -6,6 +6,8 @@ import com.vodacom.customerregistration.api.service.dto.AgentRegistrationDTO;
 import com.vodacom.customerregistration.api.service.dto.AgentRegistrationResponseDTO;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -43,14 +45,14 @@ public interface AgentService {
      * @param id the id of the entity.
      * @return the entity with user details.
      */
-    Optional<AgentDetailResponseDTO> findOne(Long id);
+    Optional<AgentDetailResponseDTO> findOne(UUID id);
 
     /**
      * Delete the "id" agent.
      *
      * @param id the id of the entity.
      */
-    void delete(Long id);
+    void delete(UUID id);
 
     /**
      * Register a new agent with associated user account in a single transaction.

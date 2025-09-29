@@ -17,6 +17,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -46,12 +47,12 @@ public class ActivityLogService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<ActivityLogDTO> findOne(Long id) {
+    public Optional<ActivityLogDTO> findOne(UUID id) {
         LOG.debug("Request to get ActivityLog : {}", id);
         return activityLogRepository.findById(id).map(activityLogMapper::toDto);
     }
 
-    public void delete(Long id) {
+    public void delete(UUID id) {
         LOG.debug("Request to delete ActivityLog : {}", id);
         activityLogRepository.deleteById(id);
     }
@@ -88,15 +89,15 @@ public class ActivityLogService {
         return activityLogRepository.findByCreatedByAndTimestampBetweenOrderByTimestampDesc(currentUserLogin, startDate, endDate, pageable).map(activityLogMapper::toDto);
     }
 
-    public void logActivity(ActivityLog.ActionType actionType, String entityType, Long entityId, String description) {
+    public void logActivity(ActivityLog.ActionType actionType, String entityType, UUID entityId, String description) {
         logActivity(actionType, entityType, entityId, description, ActivityLog.ActionStatus.SUCCESS, null);
     }
 
-    public void logActivity(ActivityLog.ActionType actionType, String entityType, Long entityId, String description, ActivityLog.ActionStatus status) {
+    public void logActivity(ActivityLog.ActionType actionType, String entityType, UUID entityId, String description, ActivityLog.ActionStatus status) {
         logActivity(actionType, entityType, entityId, description, status, null);
     }
 
-    public void logActivity(ActivityLog.ActionType actionType, String entityType, Long entityId, String description, ActivityLog.ActionStatus status, String errorMessage) {
+    public void logActivity(ActivityLog.ActionType actionType, String entityType, UUID entityId, String description, ActivityLog.ActionStatus status, String errorMessage) {
         try {
             ActivityLog activityLog = new ActivityLog().actionType(actionType).entityType(entityType).entityId(entityId).description(description).timestamp(Instant.now()).status(status).errorMessage(errorMessage);
 
@@ -138,7 +139,7 @@ public class ActivityLogService {
     }
 
     // Admin methods for comprehensive system-wide activity log management
-    
+
     @Transactional(readOnly = true)
     public Page<ActivityLogDTO> findByUser(String username, Pageable pageable) {
         LOG.debug("Admin request to get ActivityLogs for user: {}", username);

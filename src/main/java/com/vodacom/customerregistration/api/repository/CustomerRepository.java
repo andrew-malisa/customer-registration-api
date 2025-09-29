@@ -7,18 +7,20 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.UUID;
+
 /**
  * Spring Data JPA repository for the Customer entity.
  */
 @SuppressWarnings("unused")
 @Repository
-public interface CustomerRepository extends JpaRepository<Customer, Long>, JpaSpecificationExecutor<Customer> {
-    
+public interface CustomerRepository extends JpaRepository<Customer, UUID>, JpaSpecificationExecutor<Customer> {
+
     /**
      * Find customers registered by a specific agent (using audit createdBy field)
      */
     Page<Customer> findByCreatedByOrderByCreatedDateDesc(String createdBy, Pageable pageable);
-    
+
     /**
      * Find customers registered by a specific agent with name search
      */
@@ -27,7 +29,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long>, JpaSp
            "LOWER(c.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "LOWER(c.nidaNumber) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
            "ORDER BY c.createdDate DESC")
-    Page<Customer> findByCreatedByAndNameOrNidaContaining(@Param("createdBy") String createdBy, 
-                                                          @Param("searchTerm") String searchTerm, 
+    Page<Customer> findByCreatedByAndNameOrNidaContaining(@Param("createdBy") String createdBy,
+                                                          @Param("searchTerm") String searchTerm,
                                                           Pageable pageable);
 }

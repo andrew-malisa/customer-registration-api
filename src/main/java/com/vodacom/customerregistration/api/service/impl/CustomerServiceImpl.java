@@ -5,9 +5,11 @@ import com.vodacom.customerregistration.api.repository.CustomerRepository;
 import com.vodacom.customerregistration.api.repository.search.CustomerSearchRepository;
 import com.vodacom.customerregistration.api.service.CustomerService;
 import com.vodacom.customerregistration.api.service.dto.CustomerDTO;
+import com.vodacom.customerregistration.api.service.dto.CustomerResponseDTO;
 import com.vodacom.customerregistration.api.service.mapper.CustomerMapper;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,12 +53,30 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public CustomerResponseDTO saveWithAuditFields(CustomerDTO customerDTO) {
+        LOG.debug("Request to save Customer with audit fields : {}", customerDTO);
+        Customer customer = customerMapper.toEntity(customerDTO);
+        customer = customerRepository.save(customer);
+        customerSearchRepository.index(customer);
+        return customerMapper.toResponseDto(customer);
+    }
+
+    @Override
     public CustomerDTO update(CustomerDTO customerDTO) {
         LOG.debug("Request to update Customer : {}", customerDTO);
         Customer customer = customerMapper.toEntity(customerDTO);
         customer = customerRepository.save(customer);
         customerSearchRepository.index(customer);
         return customerMapper.toDto(customer);
+    }
+
+    @Override
+    public CustomerResponseDTO updateWithAuditFields(CustomerDTO customerDTO) {
+        LOG.debug("Request to update Customer with audit fields : {}", customerDTO);
+        Customer customer = customerMapper.toEntity(customerDTO);
+        customer = customerRepository.save(customer);
+        customerSearchRepository.index(customer);
+        return customerMapper.toResponseDto(customer);
     }
 
     @Override
@@ -79,14 +99,40 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public Optional<CustomerResponseDTO> partialUpdateWithAuditFields(CustomerDTO customerDTO) {
+        LOG.debug("Request to partially update Customer with audit fields : {}", customerDTO);
+
+        return customerRepository
+            .findById(customerDTO.getId())
+            .map(existingCustomer -> {
+                customerMapper.partialUpdate(existingCustomer, customerDTO);
+
+                return existingCustomer;
+            })
+            .map(customerRepository::save)
+            .map(savedCustomer -> {
+                customerSearchRepository.index(savedCustomer);
+                return savedCustomer;
+            })
+            .map(customerMapper::toResponseDto);
+    }
+
+    @Override
     @Transactional(readOnly = true)
-    public Optional<CustomerDTO> findOne(Long id) {
+    public Optional<CustomerDTO> findOne(UUID id) {
         LOG.debug("Request to get Customer : {}", id);
         return customerRepository.findById(id).map(customerMapper::toDto);
     }
 
     @Override
-    public void delete(Long id) {
+    @Transactional(readOnly = true)
+    public Optional<CustomerResponseDTO> findOneWithAuditFields(UUID id) {
+        LOG.debug("Request to get Customer with audit fields : {}", id);
+        return customerRepository.findById(id).map(customerMapper::toResponseDto);
+    }
+
+    @Override
+    public void delete(UUID id) {
         LOG.debug("Request to delete Customer : {}", id);
         customerRepository.deleteById(id);
         customerSearchRepository.deleteFromIndexById(id);

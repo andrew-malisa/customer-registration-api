@@ -4,6 +4,8 @@ import com.vodacom.customerregistration.api.domain.ActivityLog;
 import com.vodacom.customerregistration.api.service.dto.ActivityLogDTO;
 import org.mapstruct.*;
 
+import java.util.UUID;
+
 @Mapper(componentModel = "spring")
 public interface ActivityLogMapper extends EntityMapper<ActivityLogDTO, ActivityLog> {
 
@@ -37,7 +39,7 @@ public interface ActivityLogMapper extends EntityMapper<ActivityLogDTO, Activity
     @Mapping(source = "errorMessage", target = "errorMessage")
     ActivityLog toEntity(ActivityLogDTO activityLogDTO);
 
-    default ActivityLog fromId(Long id) {
+    default ActivityLog fromId(UUID id) {
         if (id == null) {
             return null;
         }

@@ -77,7 +77,7 @@ public class AgentQueryService extends QueryService<Agent> {
             // This has to be called first, because the distinct method returns null
             specification = Specification.allOf(
                 Boolean.TRUE.equals(criteria.getDistinct()) ? distinct(criteria.getDistinct()) : null,
-                buildRangeSpecification(criteria.getId(), Agent_.id),
+                buildSpecification(criteria.getId(), Agent_.id),
                 buildStringSpecification(criteria.getPhoneNumber(), Agent_.phoneNumber),
                 buildSpecification(criteria.getStatus(), Agent_.status),
                 buildSpecification(criteria.getUserId(), root -> root.join(Agent_.user, JoinType.LEFT).get(User_.id)),

@@ -23,8 +23,8 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.util.IterableUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +69,6 @@ class CustomerResourceIT {
     private static final String ENTITY_SEARCH_API_URL = "/api/v1/customers/_search";
 
     private static Random random = new Random();
-    private static AtomicLong longCount = new AtomicLong(random.nextInt() + (2 * Integer.MAX_VALUE));
 
     @Autowired
     private ObjectMapper om;
@@ -197,7 +196,7 @@ class CustomerResourceIT {
     @Transactional
     void createCustomerWithExistingId() throws Exception {
         // Create the Customer with an existing ID
-        customer.setId(1L);
+        customer.setId(UUID.fromString("11111111-1111-1111-1111-111111111111"));
         CustomerDTO customerDTO = customerMapper.toDto(customer);
 
         long databaseSizeBeforeCreate = getRepositoryCount();
@@ -308,8 +307,7 @@ class CustomerResourceIT {
             .perform(get(ENTITY_API_URL + "?sort=id,desc"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(customer.getId().intValue())))
-            .andExpect(jsonPath("$.[*].firstName").value(hasItem(DEFAULT_FIRST_NAME)))
+            .andExpect(jsonPath("$.id").value(customer.getId().toString()))            .andExpect(jsonPath("$.[*].firstName").value(hasItem(DEFAULT_FIRST_NAME)))
             .andExpect(jsonPath("$.[*].dateOfBirth").value(hasItem(DEFAULT_DATE_OF_BIRTH.toString())))
             .andExpect(jsonPath("$.[*].nidaNumber").value(hasItem(DEFAULT_NIDA_NUMBER)))
             .andExpect(jsonPath("$.[*].registrationDate").value(hasItem(DEFAULT_REGISTRATION_DATE.toString())));
@@ -326,7 +324,7 @@ class CustomerResourceIT {
             .perform(get(ENTITY_API_URL_ID, customer.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.id").value(customer.getId().intValue()))
+            .andExpect(jsonPath("$.id").value(customer.getId().toString()))
             .andExpect(jsonPath("$.firstName").value(DEFAULT_FIRST_NAME))
             .andExpect(jsonPath("$.dateOfBirth").value(DEFAULT_DATE_OF_BIRTH.toString()))
             .andExpect(jsonPath("$.nidaNumber").value(DEFAULT_NIDA_NUMBER))
@@ -339,7 +337,7 @@ class CustomerResourceIT {
         // Initialize the database
         insertedCustomer = customerRepository.saveAndFlush(customer);
 
-        Long id = customer.getId();
+        UUID id = customer.getId();
 
         defaultCustomerFiltering("id.equals=" + id, "id.notEquals=" + id);
 
@@ -585,12 +583,12 @@ class CustomerResourceIT {
         em.persist(registeredBy);
         em.flush();
         customerRepository.saveAndFlush(customer);
-        Long registeredById = registeredBy.getId();
+        UUID registeredById = registeredBy.getId();
         // Get all the customerList where registeredBy equals to registeredById
         defaultCustomerShouldBeFound("registeredById.equals=" + registeredById);
 
         // Get all the customerList where registeredBy equals to (registeredById + 1)
-        defaultCustomerShouldNotBeFound("registeredById.equals=" + (registeredById + 1));
+        defaultCustomerShouldNotBeFound("registeredById.equals=" + (registeredById));
     }
 
     private void defaultCustomerFiltering(String shouldBeFound, String shouldNotBeFound) throws Exception {
@@ -606,7 +604,7 @@ class CustomerResourceIT {
             .perform(get(ENTITY_API_URL + "?sort=id,desc&" + filter))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(customer.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(customer.getId().toString())))
             .andExpect(jsonPath("$.[*].firstName").value(hasItem(DEFAULT_FIRST_NAME)))
             .andExpect(jsonPath("$.[*].dateOfBirth").value(hasItem(DEFAULT_DATE_OF_BIRTH.toString())))
             .andExpect(jsonPath("$.[*].nidaNumber").value(hasItem(DEFAULT_NIDA_NUMBER)))
@@ -643,7 +641,7 @@ class CustomerResourceIT {
     @Transactional
     void getNonExistingCustomer() throws Exception {
         // Get the customer
-        restCustomerMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
+        restCustomerMockMvc.perform(get(ENTITY_API_URL_ID, UUID.fromString("99999999-9999-9999-9999-999999999999"))).andExpect(status().isNotFound());
     }
 
     @Test
@@ -695,7 +693,7 @@ class CustomerResourceIT {
     void putNonExistingCustomer() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(customerSearchRepository.findAll());
-        customer.setId(longCount.incrementAndGet());
+        customer.setId(UUID.randomUUID());
 
         // Create the Customer
         CustomerDTO customerDTO = customerMapper.toDto(customer);
@@ -720,7 +718,7 @@ class CustomerResourceIT {
     void putWithIdMismatchCustomer() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(customerSearchRepository.findAll());
-        customer.setId(longCount.incrementAndGet());
+        customer.setId(UUID.randomUUID());
 
         // Create the Customer
         CustomerDTO customerDTO = customerMapper.toDto(customer);
@@ -728,7 +726,7 @@ class CustomerResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restCustomerMockMvc
             .perform(
-                put(ENTITY_API_URL_ID, longCount.incrementAndGet())
+                put(ENTITY_API_URL_ID, UUID.randomUUID())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(om.writeValueAsBytes(customerDTO))
             )
@@ -745,7 +743,7 @@ class CustomerResourceIT {
     void putWithMissingIdPathParamCustomer() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(customerSearchRepository.findAll());
-        customer.setId(longCount.incrementAndGet());
+        customer.setId(UUID.randomUUID());
 
         // Create the Customer
         CustomerDTO customerDTO = customerMapper.toDto(customer);
@@ -825,7 +823,7 @@ class CustomerResourceIT {
     void patchNonExistingCustomer() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(customerSearchRepository.findAll());
-        customer.setId(longCount.incrementAndGet());
+        customer.setId(UUID.randomUUID());
 
         // Create the Customer
         CustomerDTO customerDTO = customerMapper.toDto(customer);
@@ -850,7 +848,7 @@ class CustomerResourceIT {
     void patchWithIdMismatchCustomer() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(customerSearchRepository.findAll());
-        customer.setId(longCount.incrementAndGet());
+        customer.setId(UUID.randomUUID());
 
         // Create the Customer
         CustomerDTO customerDTO = customerMapper.toDto(customer);
@@ -858,7 +856,7 @@ class CustomerResourceIT {
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
         restCustomerMockMvc
             .perform(
-                patch(ENTITY_API_URL_ID, longCount.incrementAndGet())
+                patch(ENTITY_API_URL_ID, UUID.randomUUID())
                     .contentType("application/merge-patch+json")
                     .content(om.writeValueAsBytes(customerDTO))
             )
@@ -875,7 +873,7 @@ class CustomerResourceIT {
     void patchWithMissingIdPathParamCustomer() throws Exception {
         long databaseSizeBeforeUpdate = getRepositoryCount();
         int searchDatabaseSizeBefore = IterableUtil.sizeOf(customerSearchRepository.findAll());
-        customer.setId(longCount.incrementAndGet());
+        customer.setId(UUID.randomUUID());
 
         // Create the Customer
         CustomerDTO customerDTO = customerMapper.toDto(customer);
@@ -926,7 +924,7 @@ class CustomerResourceIT {
             .perform(get(ENTITY_SEARCH_API_URL + "?query=id:" + customer.getId()))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(customer.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(customer.getId().toString())))
             .andExpect(jsonPath("$.[*].firstName").value(hasItem(DEFAULT_FIRST_NAME)))
             .andExpect(jsonPath("$.[*].dateOfBirth").value(hasItem(DEFAULT_DATE_OF_BIRTH.toString())))
             .andExpect(jsonPath("$.[*].nidaNumber").value(hasItem(DEFAULT_NIDA_NUMBER)))

@@ -18,6 +18,7 @@ import com.vodacom.customerregistration.api.web.rest.vm.ManagedUserVM;
 import com.vodacom.customerregistration.api.service.mapper.AgentMapper;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,13 +97,13 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<AgentDetailResponseDTO> findOne(Long id) {
+    public Optional<AgentDetailResponseDTO> findOne(UUID id) {
         LOG.debug("Request to get Agent : {}", id);
         return agentRepository.findById(id).map(agentMapper::toDetailResponse);
     }
 
     @Override
-    public void delete(Long id) {
+    public void delete(UUID id) {
         LOG.debug("Request to delete Agent : {}", id);
         agentRepository.deleteById(id);
         agentSearchRepository.deleteFromIndexById(id);
@@ -116,7 +117,6 @@ public class AgentServiceImpl implements AgentService {
         AdminUserDTO adminUserDTO = agentMapper.toAdminUserDTOWithRoles(registrationDTO);
 
         User createdUser = userService.createUser(adminUserDTO);
-        mailService.sendCreationEmail(createdUser);
 
         LOG.debug("Created User account: {}", createdUser.getLogin());
 
@@ -127,6 +127,9 @@ public class AgentServiceImpl implements AgentService {
         agentSearchRepository.index(agent);
 
         LOG.debug("Created Agent: {} for User: {}", agent.getId(), createdUser.getLogin());
+
+        // Send email only after successful creation
+        mailService.sendCreationEmail(createdUser);
 
         AdminUserDTO userDTO = new AdminUserDTO(createdUser);
         return agentMapper.toRegistrationResponse(userDTO, agent);
